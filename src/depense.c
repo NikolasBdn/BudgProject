@@ -40,7 +40,6 @@ void insertDepense(char *m, char *t){
 
     }
   }
-  printf("TITI\n");
 }
 
 

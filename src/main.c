@@ -10,7 +10,7 @@
 #include "depense_recu.h"
 #include "depense.h"
 
-// gcc -Wall src/main.c src/budget.c src/depense.c src/depense_recu.c -o src/main.o  -fno-stack-protector  -lsqlite3 -std=c99  `pkg-config --libs --cflags gtk+-3.0
+// gcc -Wall src/main.c src/budget.c src/depense.c src/depense_recu.c -o src/main.o  -fno-stack-protector  -lsqlite3 -std=c99  `pkg-config --libs --cflags gtk+-3.0`
 
 static GtkWidget *bt_save_dep, *bt_new_budg;
 GtkWidget *input_dep, *combo_box_dep, *check_box_recu;
@@ -45,7 +45,6 @@ void bddConnect(){
 }
 
 char *displayBudgets(struct Budget budg){
-  // printf("BUDGET: %f\n", getDepensesSumByType(budg.type));
   static char res[200];
   sprintf(res, "%s", "");
   strcat(res, "<b>");
@@ -137,19 +136,14 @@ void insertAllDepenses(){
     dep.montant = (float)((int) dep.montant);
     dep.montant = dep.montant/100;
 
-
     snprintf(dep.type, sizeof(dep.type), "%s", (char *)sqlite3_column_text(stmt, 2));
     snprintf(dep.date, sizeof(dep.date), "%s", (char *)sqlite3_column_text(stmt, 3));
 
     displayDepense(list, dep);
-    printf("%s : %.2f\n", sqlite3_column_text(stmt, 2), sqlite3_column_double(stmt, 0));
+    // printf("%s : %.2f\n", sqlite3_column_text(stmt, 2), sqlite3_column_double(stmt, 0));
   }
-
 }
 
-void test(GtkToggleButton *toggle_button, gpointer user_data){
-  printf("TEST\n");
-}
 
 void newDepense(GtkWidget *button, gpointer data)
 {
@@ -157,16 +151,15 @@ void newDepense(GtkWidget *button, gpointer data)
   replacechar(m, '.', ',');
   char t[20];
   snprintf(t, sizeof(t), "%s", (char *)gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(combo_box_dep)));
-  testRecu();
+
+  // testRecu();
+
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check_box_recu))){
     printf("DEPENSE RECURRENTE\n");
     insertDepenseRecu(m, t);
   }else{
     printf("DEPENSE\n");
-
     insertDepense(m, t);
-    printf("TOTO\n");
-
   }
 }
 
@@ -251,6 +244,7 @@ void createWindow(int argc, char ** argv){
 
   init_list(list);//inti liste des depenses
   insertAllDepenses();
+  paymentDepRecu();
 
   gtk_container_add(GTK_CONTAINER(window), box_all);
   gtk_window_set_default_size(GTK_WINDOW (window), 800, 400);

@@ -53,3 +53,8 @@ void testRecu(){
  }
   return;
 }
+
+
+void paymentDepRecu(){
+  printf("Payment depenses recurrentes\n");
+}
