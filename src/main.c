@@ -12,13 +12,19 @@
 
 // gcc -Wall src/main.c src/budget.c src/depense.c src/depense_recu.c -o src/main.o  -fno-stack-protector  -lsqlite3 -std=c99  `pkg-config --libs --cflags gtk+-3.0`
 
-static GtkWidget *bt_save_dep, *bt_new_budg;
+GtkWidget *bt_save_dep, *bt_new_budg;
 GtkWidget *input_dep, *combo_box_dep, *check_box_recu;
 GtkWidget *input_nom_budg, *input_montant_budg;
 GtkWidget *window, *grid;
 GtkWidget *labelBudg[20];
-GtkWidget *box_all, *box_budg, *list;
+GtkWidget *box_all, *box_budg;
+GtkWidget *list, *store;
 GtkWidget *scrolled_window;
+GtkWidget *dialog_dep;
+
+GtkListStore *list_store_dep, *list_store_budg;
+GtkTreeViewColumn *cx1, *cx2, *cx3, *cx4, *cx5 ;
+GtkCellRenderer *cr1, *cr2, *cr3, *cr4, *cr5;
 
 sqlite3 *db;
 int nbBudgets;
@@ -147,6 +153,7 @@ void insertAllDepenses(){
 
 void newDepense(GtkWidget *button, gpointer data)
 {
+  printf("NEW DEPENSE\n");
   char *m = (char *)gtk_entry_get_text(GTK_ENTRY(input_dep));
   replacechar(m, '.', ',');
   char t[20];
@@ -163,91 +170,170 @@ void newDepense(GtkWidget *button, gpointer data)
   }
 }
 
+void vueDepenses(){
+  GtkTreeIter iter;
+
+  sqlite3_stmt *stmt;
+  char request[60] = "select * from DEPENSES";
+
+  if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
+    printf("ERROR TO SELECT DATA : vueDepenses\n");
+    exit(-1);
+  }
+
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    double montant = sqlite3_column_double(stmt, 1) * 100;
+    montant = (float)((int) montant);
+    montant = montant/100;
+    char type[20];
+    char date[20];
+    snprintf(type, sizeof(type), "%s", (char *)sqlite3_column_text(stmt, 2));
+    snprintf(date, sizeof(date), "%s", (char *)sqlite3_column_text(stmt, 3));
+    gtk_list_store_append(list_store_dep, &iter);
+    gtk_list_store_set(list_store_dep, &iter, 0, type, 1, montant, 2, date, -1);
+  }
+}
+
+void vueBudgets(){
+  GtkTreeIter iter;
+  sqlite3_stmt *stmt;
+  char request[60] = "select * from BUDGETS";
+
+  if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
+    printf("ERROR TO SELECT DATA : vueBudgets\n");
+    exit(-1);
+  }
+
+  printf("BUDG\n");
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    float montant = sqlite3_column_double(stmt, 1) ;
+    montant = (float)((int) montant * 100) / 100;
+    // montant = montant/100;
+
+
+    float value = (int)(10.5500000 * 100);
+    printf("%d\n", (int)value);
+    printf("%d\n", (int)value);
+    printf("%d\n", (int)value / 100 );
+
+
+    char type[20];
+    snprintf(type, sizeof(type), "%s", (char *)sqlite3_column_text(stmt, 2));
+    // snprintf(date, sizeof(date), "%s", (char *)sqlite3_column_text(stmt, 3));
+    gtk_list_store_append(list_store_budg, &iter);
+    gtk_list_store_set(list_store_budg, &iter, 0, type, 1, montant, -1);
+  }
+
+}
+
+
+
+void  test() {
+  printf("OPEN DIALOG : ADD DEP \n");
+  gtk_widget_show(dialog_dep);
+}
+
 //Creation de l'interface
 void createWindow(int argc, char ** argv){
+  GtkBuilder      *builder;
+
   gtk_init(&argc, &argv);
 
-  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  builder = gtk_builder_new_from_file("glade1.glade");
+
+  window = GTK_WIDGET(gtk_builder_get_object(builder, "window_main"));
   gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
   gtk_container_set_border_width(GTK_CONTAINER(window), 10);
   g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-  grid = gtk_grid_new();
+  gtk_builder_connect_signals(builder, NULL);
 
-  GtkWidget *lab_budg = gtk_label_new("Budget:");
-  gtk_grid_attach(GTK_GRID(grid), lab_budg, 0,1+getNbBudgets(),1,1);
-  input_nom_budg = gtk_entry_new();
-  gtk_entry_set_placeholder_text (GTK_ENTRY(input_nom_budg), "Nom");
-  input_montant_budg = gtk_entry_new();
-  gtk_entry_set_placeholder_text (GTK_ENTRY(input_montant_budg), "Montant");
+  bt_save_dep = GTK_WIDGET(gtk_builder_get_object(builder, "button_dep"));
+  dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_dep"));
+  list_store_dep = GTK_LIST_STORE(gtk_builder_get_object(builder, "historique_dep"));
+  list_store_budg = GTK_LIST_STORE(gtk_builder_get_object(builder, "liste_budg"));
+  // list = GTK_WIDGET(gtk_builder_get_object(builder, "tree_view_dep"));
 
-  gtk_grid_attach(GTK_GRID(grid), input_nom_budg, 0,2+getNbBudgets(),1,1);
-  gtk_grid_attach(GTK_GRID(grid), input_montant_budg, 0,3+getNbBudgets(),1,1);
+  cx1 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx1"));
+  cx2 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx2"));
+  cx3 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx3"));
 
-  bt_new_budg = gtk_button_new_with_label("Nouveau budget");
-  gtk_grid_attach(GTK_GRID(grid), bt_new_budg, 0,4+getNbBudgets(),1,1);
-  combo_box_dep = gtk_combo_box_text_new();
+  cr1 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr1"));
+  cr2 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr2"));
+  cr3 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr3"));
 
-    struct Input inpt_budg;
-  inpt_budg.m = input_montant_budg;
-  inpt_budg.t = input_nom_budg;
-  g_signal_connect(bt_new_budg, "clicked", G_CALLBACK(insertBudg), &inpt_budg);
+  cx4 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx1"));
+  cx5 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx2"));
 
-  bt_save_dep = gtk_button_new_with_label("Nouvelle dépense");
-  check_box_recu = gtk_check_button_new_with_label ("Cette dépense est récurrente");
-  gtk_grid_attach(GTK_GRID(grid), check_box_recu, 0,8+getNbBudgets(),1,1);
-  // g_signal_connect(GTK_TOGGLE_BUTTON(check_box_recu), "toggled", G_CALLBACK(check_recu), &inpt_budg);
+  cr4 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr1"));
+  cr5 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr2"));
 
-  GtkWidget *lab_dep = gtk_label_new("Depense:");
-  gtk_grid_attach(GTK_GRID(grid), lab_dep, 0,5+getNbBudgets(),1,1);
+  vueDepenses();
 
-  input_dep = gtk_entry_new();
-  gtk_grid_attach(GTK_GRID(grid), input_dep, 0,6+getNbBudgets(),1,1);
-  gtk_entry_set_placeholder_text (GTK_ENTRY(input_dep), "Montant");
+  vueBudgets();
 
+  // struct Input inpt_budg;
+  // inpt_budg.m = input_montant_budg;
+  // inpt_budg.t = input_nom_budg;
+  // g_signal_connect(bt_new_budg, "clicked", G_CALLBACK(insertBudg), &inpt_budg);
+  //
+  // bt_save_dep = gtk_button_new_with_label("Nouvelle dépense");
+  // check_box_recu = gtk_check_button_new_with_label ("Cette dépense est récurrente");
+  // gtk_grid_attach(GTK_GRID(grid), check_box_recu, 0,8+getNbBudgets(),1,1);
+  // // g_signal_connect(GTK_TOGGLE_BUTTON(check_box_recu), "toggled", G_CALLBACK(check_recu), &inpt_budg);
+  //
+  // GtkWidget *lab_dep = gtk_label_new("Depense:");
+  // gtk_grid_attach(GTK_GRID(grid), lab_dep, 0,5+getNbBudgets(),1,1);
+  //
+  // input_dep = gtk_entry_new();
+  // gtk_grid_attach(GTK_GRID(grid), input_dep, 0,6+getNbBudgets(),1,1);
+  // gtk_entry_set_placeholder_text (GTK_ENTRY(input_dep), "Montant");
+  //
+  //
+  // box_budg = gtk_box_new(TRUE, 0);
+  //
+  // for (int i = 0; i < getNbBudgets(); i++) {
+  //   labelBudg[i] = gtk_label_new(displayBudgets(getBudget(i+1)));
+  //   gtk_box_pack_start(GTK_BOX(box_budg), labelBudg[i], FALSE, FALSE, 0);
+  //   gtk_label_set_use_markup(GTK_LABEL(labelBudg[i]), TRUE);
+  //   gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box_dep), getBudget(i+1).type);
+  // }
+  //
+  // gtk_box_set_homogeneous (GTK_BOX(box_budg), TRUE);
+  //
+  // g_signal_connect(bt_save_dep, "clicked", G_CALLBACK(newDepense), NULL);
+  // gtk_grid_attach(GTK_GRID(grid), bt_save_dep, 0,9+getNbBudgets(),1,1);
+  //
+  // gtk_combo_box_set_active (GTK_COMBO_BOX (combo_box_dep), 0);
+  //
+  // gtk_grid_attach(GTK_GRID(grid), combo_box_dep, 0,7+getNbBudgets(),1,1);
+  //
+  // box_all = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  //
+  // gtk_box_pack_start(GTK_BOX(box_all), box_budg, FALSE, TRUE, 15);
+  // gtk_box_pack_start(GTK_BOX(box_all), grid, FALSE, TRUE, 15);
+  //
+  //
+  // scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+  // gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
+  //                                   GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+  //
+  // list = gtk_tree_view_new();
+  //
+  // gtk_container_add(GTK_CONTAINER(scrolled_window), list);
+  // gtk_widget_show(list);
+  //
+  // gtk_box_pack_start(GTK_BOX(box_all), scrolled_window, TRUE, TRUE, 0);
+  //
+  //
+  // init_list(list);//inti liste des depenses
+  // insertAllDepenses();
+  // paymentDepRecu();
+  //
+  // gtk_container_add(GTK_CONTAINER(window), box_all);
+  // gtk_window_set_default_size(GTK_WINDOW (window), 900, 450);
 
-  box_budg = gtk_box_new(TRUE, 0);
-
-  for (int i = 0; i < getNbBudgets(); i++) {
-    labelBudg[i] = gtk_label_new(displayBudgets(getBudget(i+1)));
-    gtk_box_pack_start(GTK_BOX(box_budg), labelBudg[i], FALSE, FALSE, 0);
-    gtk_label_set_use_markup(GTK_LABEL(labelBudg[i]), TRUE);
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box_dep), getBudget(i+1).type);
-  }
-
-  gtk_box_set_homogeneous (GTK_BOX(box_budg), TRUE);
-
-  g_signal_connect(bt_save_dep, "clicked", G_CALLBACK(newDepense), NULL);
-  gtk_grid_attach(GTK_GRID(grid), bt_save_dep, 0,9+getNbBudgets(),1,1);
-
-  gtk_combo_box_set_active (GTK_COMBO_BOX (combo_box_dep), 0);
-
-  gtk_grid_attach(GTK_GRID(grid), combo_box_dep, 0,7+getNbBudgets(),1,1);
-
-  box_all = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-
-  gtk_box_pack_start(GTK_BOX(box_all), box_budg, FALSE, TRUE, 15);
-  gtk_box_pack_start(GTK_BOX(box_all), grid, FALSE, TRUE, 15);
-
-
-  scrolled_window = gtk_scrolled_window_new (NULL, NULL);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
-                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
-
-  list = gtk_tree_view_new();
-
-  gtk_container_add(GTK_CONTAINER(scrolled_window), list);
-  gtk_widget_show(list);
-
-  gtk_box_pack_start(GTK_BOX(box_all), scrolled_window, TRUE, TRUE, 0);
-
-
-  init_list(list);//inti liste des depenses
-  insertAllDepenses();
-  paymentDepRecu();
-
-  gtk_container_add(GTK_CONTAINER(window), box_all);
-  gtk_window_set_default_size(GTK_WINDOW (window), 800, 400);
+  g_object_unref(builder);
 
   gtk_widget_show_all(window);
   gtk_main();
