@@ -2,13 +2,14 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkDialog" id="dialog_dep">
+  <object class="GtkDialog" id="dialog_budg">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Nouvelle dépense</property>
+    <property name="resizable">False</property>
     <property name="default_width">320</property>
     <property name="default_height">260</property>
     <property name="type_hint">dialog</property>
-    <child>
+    <property name="deletable">False</property>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child internal-child="vbox">
@@ -21,11 +22,12 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="bt_save_dep1">
                 <property name="label" translatable="yes">AJouter</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="newBudget" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -39,6 +41,131 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="hide_dialog_budg" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkFixed" id="dialog_bud">
+            <property name="width_request">32</property>
+            <property name="height_request">32</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkEntry" id="entry_budg_nom">
+                <property name="name">entry_montant_dep</property>
+                <property name="width_request">180</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+              <packing>
+                <property name="x">118</property>
+                <property name="y">57</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="width_request">100</property>
+                <property name="height_request">35</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Nom :</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="x">9</property>
+                <property name="y">53</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="width_request">100</property>
+                <property name="height_request">23</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Montant :</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="x">7</property>
+                <property name="y">133</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entry_budg_montant">
+                <property name="name">entry_montant_dep</property>
+                <property name="width_request">180</property>
+                <property name="height_request">30</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+              <packing>
+                <property name="x">117</property>
+                <property name="y">128</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkDialog" id="dialog_dep">
+    <property name="can_focus">False</property>
+    <property name="resizable">False</property>
+    <property name="default_width">320</property>
+    <property name="default_height">260</property>
+    <property name="type_hint">dialog</property>
+    <property name="deletable">False</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="bt_save_dep">
+                <property name="label" translatable="yes">AJouter</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="newDepense" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Annuler</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="hide_dialog_dep" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -60,7 +187,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkEntry">
+              <object class="GtkEntry" id="entry_dep">
                 <property name="name">entry_montant_dep</property>
                 <property name="width_request">180</property>
                 <property name="height_request">30</property>
@@ -68,8 +195,8 @@
                 <property name="can_focus">True</property>
               </object>
               <packing>
-                <property name="x">121</property>
-                <property name="y">126</property>
+                <property name="x">118</property>
+                <property name="y">57</property>
               </packing>
             </child>
             <child>
@@ -97,20 +224,34 @@
               </object>
               <packing>
                 <property name="x">7</property>
-                <property name="y">129</property>
+                <property name="y">133</property>
               </packing>
             </child>
             <child>
-              <object class="GtkComboBox">
-                <property name="name">combo_type_dep</property>
+              <object class="GtkCheckButton" id="check_box_dep_recu">
+                <property name="label" translatable="yes">Cette dépense est récurrente</property>
+                <property name="width_request">223</property>
+                <property name="height_request">36</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="x">79</property>
+                <property name="y">176</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="combo_box_dep">
                 <property name="width_request">180</property>
                 <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
               </object>
               <packing>
-                <property name="x">121</property>
-                <property name="y">58</property>
+                <property name="x">116</property>
+                <property name="y">128</property>
               </packing>
             </child>
           </object>
@@ -138,7 +279,9 @@
       <!-- column-name Nom -->
       <column type="gchararray"/>
       <!-- column-name Montant -->
-      <column type="gfloat"/>
+      <column type="gchararray"/>
+      <!-- column-name Progression -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkWindow" id="window_main">
@@ -153,14 +296,14 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
-          <object class="GtkButton" id="button_dep">
+          <object class="GtkButton" id="bt_dep">
             <property name="label" translatable="yes">Nouvelle dépense</property>
             <property name="width_request">193</property>
             <property name="height_request">51</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <signal name="clicked" handler="test" swapped="no"/>
+            <signal name="clicked" handler="open_dialog_dep" swapped="no"/>
           </object>
           <packing>
             <property name="x">342</property>
@@ -240,7 +383,7 @@
         <child>
           <object class="GtkScrolledWindow" id="view2">
             <property name="width_request">326</property>
-            <property name="height_request">136</property>
+            <property name="height_request">219</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="margin_top">2</property>
@@ -275,11 +418,22 @@
                     </child>
                   </object>
                 </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="cx6">
+                    <property name="title" translatable="yes">Progression</property>
+                    <child>
+                      <object class="GtkCellRendererProgress" id="cr6"/>
+                      <attributes>
+                        <attribute name="value">2</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
           </object>
           <packing>
-            <property name="y">223</property>
+            <property name="y">140</property>
           </packing>
         </child>
         <child>
@@ -290,8 +444,8 @@
             <property name="can_focus">False</property>
           </object>
           <packing>
-            <property name="x">14</property>
-            <property name="y">135</property>
+            <property name="x">18</property>
+            <property name="y">86</property>
           </packing>
         </child>
         <child>
@@ -305,6 +459,20 @@
           <packing>
             <property name="x">101</property>
             <property name="y">33</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="bt_budg">
+            <property name="label" translatable="yes">Ajouter un budget</property>
+            <property name="width_request">110</property>
+            <property name="height_request">35</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <signal name="clicked" handler="open_dialog_budg" swapped="no"/>
+          </object>
+          <packing>
+            <property name="y">368</property>
           </packing>
         </child>
       </object>

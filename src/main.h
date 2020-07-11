@@ -18,5 +18,8 @@ void createWindow(int argc, char ** argv);
 int main(int argc, char **argv);
 char *displayBudgets(struct Budget budg);
 void displayDepense(GtkWidget *list, struct Depense dep);
-void updateBudgets(struct Budget);
+
+void vueBudgets();
+void vueDepenses();
+void updateBudgets();
 #endif

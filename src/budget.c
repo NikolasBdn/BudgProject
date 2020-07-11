@@ -28,15 +28,13 @@ int budgUnique(char *type){
 }
 
 
-void insertBudg(GtkWidget *button, gpointer data){
-  struct Input * inputs = (struct Input *)data;
-  char *montant = (char *)gtk_entry_get_text(GTK_ENTRY(inputs->m));
+void insertBudg(char *montant, char *type){
   replacechar(montant, '.', ',');
 
   struct Budget budg;
   budg.montant = atof(montant);
-  snprintf(budg.type, sizeof(budg.type), "%s", (char *)gtk_entry_get_text(GTK_ENTRY(inputs->t)));
-
+  snprintf(budg.type, sizeof(budg.type), "%s", type);
+  printf("INSERT BUDG : %s : %s\n", type, montant);
     //Si montant > 0 et si le budg n'existe pas encore
   if (budg.montant > 0 && budgUnique(budg.type)) {
 
@@ -50,8 +48,9 @@ void insertBudg(GtkWidget *button, gpointer data){
     if(sqlite3_exec(db, request, NULL, NULL, NULL)){
       printf("ERROR IN INSERTION : BUDGET\n");
     }else{
-      printf("INSERT : BUDGET\n");
-      updateBudgets(budg);
+      printf("INSERT BUDGET : %s : %s\n", montant, type);
+      // updateBudgets();
+      vueBudgets();
     }
   }else{
     printf("PAS UNIQUE: %s\n", budg.type);
@@ -111,12 +110,4 @@ int getNbBudgets(){
 
   sqlite3_step(stmt);
   return sqlite3_column_int(stmt, 0);
-}
-
-void updateBudgetsMontant(){
-
-  for (int i = 0; i < getNbBudgets(); i++) {
-    gtk_label_set_text(GTK_LABEL(labelBudg[i]), displayBudgets(getBudget(i+1)));
-    gtk_label_set_use_markup(GTK_LABEL(labelBudg[i]), TRUE);
-  }
 }

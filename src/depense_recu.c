@@ -55,6 +55,16 @@ void testRecu(){
 }
 
 
-void paymentDepRecu(){
-  printf("Payment depenses recurrentes\n");
+void paymentDepensesRecu(){
+    sqlite3_stmt *stmt;
+  char a[80] = "select * from DEPENSESRECURRENTE";
+
+  if (sqlite3_prepare_v2(db, a, -1, &stmt, NULL)) {
+    printf("ERROR TO SELECT DATA\n");
+    exit(-1);
+  }
+
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+      // insertDepense(sqlite3_column_double(stmt, 1), sqlite3_column_text(stmt, 2));
+ }
 }

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 #include "main.h"
 #include "budget.h"
@@ -12,7 +13,7 @@
 
 // gcc -Wall src/main.c src/budget.c src/depense.c src/depense_recu.c -o src/main.o  -fno-stack-protector  -lsqlite3 -std=c99  `pkg-config --libs --cflags gtk+-3.0`
 
-GtkWidget *bt_save_dep, *bt_new_budg;
+GtkWidget *bt_open_dialog_dep, *bt_open_dialog_budg, *bt_new_budg, *bt_save_dep;
 GtkWidget *input_dep, *combo_box_dep, *check_box_recu;
 GtkWidget *input_nom_budg, *input_montant_budg;
 GtkWidget *window, *grid;
@@ -20,22 +21,23 @@ GtkWidget *labelBudg[20];
 GtkWidget *box_all, *box_budg;
 GtkWidget *list, *store;
 GtkWidget *scrolled_window;
-GtkWidget *dialog_dep;
+GtkWidget *dialog_dep, *dialog_budg;
 
 GtkListStore *list_store_dep, *list_store_budg;
-GtkTreeViewColumn *cx1, *cx2, *cx3, *cx4, *cx5 ;
-GtkCellRenderer *cr1, *cr2, *cr3, *cr4, *cr5;
+GtkTreeViewColumn *cx1, *cx2, *cx3, *cx4, *cx5, *cx6;
+GtkCellRenderer *cr1, *cr2, *cr3, *cr4, *cr5, *cr6;
 
 sqlite3 *db;
 int nbBudgets;
 
+//GOOD
 void bddConnect(){
   if (sqlite3_open("the.db", &db)) {
     printf("Could not open the.db\n");
     exit(-1);
   }
 
-    if (sqlite3_exec(db, "create table DEPENSES (idDep integer primary key autoincrement, montantDep double(7,2) not null, typeDep varchar(20))", NULL, NULL, NULL)) {
+    if (sqlite3_exec(db, "create table DEPENSES (idDep integer primary key autoincrement, montantDep flaot(7,2) not null, typeDep varchar(20), dateDep datetime default (STRFTIME('%d/%m/%Y', 'NOW','localtime')))", NULL, NULL, NULL)) {
      printf("Error executing sql statement\n");
   }
   else {
@@ -47,6 +49,14 @@ void bddConnect(){
   }
   else {
     printf("Table BUDGETS created\n");
+  }
+
+
+  if (sqlite3_exec(db, "create table DEPENSESRECURRENTE (idDepRecu integer primary key autoincrement, montantDepRecu int not null, typeDepRecu varchar(20), dateDepRecu datetime default (STRFTIME('%d/%m/%Y', 'NOW','localtime')))", NULL, NULL, NULL)) {
+     printf("Error executing sql statement\n");
+  }
+  else {
+    printf("Table DEPENSE RECURRENTE created\n");
   }
 }
 
@@ -150,9 +160,21 @@ void insertAllDepenses(){
   }
 }
 
+//GOOD
+void newBudget(GtkWidget *button, gpointer data){
+  printf("NEW BUDGET\n");
 
-void newDepense(GtkWidget *button, gpointer data)
-{
+  char *m = (char *)gtk_entry_get_text(GTK_ENTRY(input_montant_budg));
+  replacechar(m, '.', ',');
+  char *n = (char *)gtk_entry_get_text(GTK_ENTRY(input_nom_budg));
+
+  insertBudg(m, n);
+  gtk_entry_set_text(GTK_ENTRY(input_montant_budg), "");
+  gtk_entry_set_text(GTK_ENTRY(input_nom_budg), "");
+}
+
+//GOOD
+void newDepense(GtkWidget *button, gpointer data){
   printf("NEW DEPENSE\n");
   char *m = (char *)gtk_entry_get_text(GTK_ENTRY(input_dep));
   replacechar(m, '.', ',');
@@ -168,8 +190,11 @@ void newDepense(GtkWidget *button, gpointer data)
     printf("DEPENSE\n");
     insertDepense(m, t);
   }
+
+  gtk_entry_set_text(GTK_ENTRY(input_dep), "");
 }
 
+//GOOD
 void vueDepenses(){
   GtkTreeIter iter;
 
@@ -180,6 +205,7 @@ void vueDepenses(){
     printf("ERROR TO SELECT DATA : vueDepenses\n");
     exit(-1);
   }
+  gtk_list_store_clear(list_store_dep);
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     double montant = sqlite3_column_double(stmt, 1) * 100;
@@ -194,6 +220,7 @@ void vueDepenses(){
   }
 }
 
+//GOOD
 void vueBudgets(){
   GtkTreeIter iter;
   sqlite3_stmt *stmt;
@@ -203,34 +230,58 @@ void vueBudgets(){
     printf("ERROR TO SELECT DATA : vueBudgets\n");
     exit(-1);
   }
-
-  printf("BUDG\n");
+  gtk_list_store_clear(list_store_budg);
+  gtk_combo_box_text_remove_all(GTK_COMBO_BOX_TEXT(combo_box_dep));
   while (sqlite3_step(stmt) == SQLITE_ROW) {
+
     float montant = sqlite3_column_double(stmt, 1) ;
     montant = (float)((int) montant * 100) / 100;
-    // montant = montant/100;
-
-
-    float value = (int)(10.5500000 * 100);
-    printf("%d\n", (int)value);
-    printf("%d\n", (int)value);
-    printf("%d\n", (int)value / 100 );
-
 
     char type[20];
     snprintf(type, sizeof(type), "%s", (char *)sqlite3_column_text(stmt, 2));
-    // snprintf(date, sizeof(date), "%s", (char *)sqlite3_column_text(stmt, 3));
-    gtk_list_store_append(list_store_budg, &iter);
-    gtk_list_store_set(list_store_budg, &iter, 0, type, 1, montant, -1);
-  }
 
+    char montString[50];
+    gcvt(getDepensesSumByType(type), 5, montString);
+    strcat(montString, "/");
+
+    char bufferMont[50];
+    gcvt(montant, 5, bufferMont);
+    strcat(montString, bufferMont);
+    printf("%s\n", montString);
+
+    int progress = (getDepensesSumByType(type) * 100) / montant;
+
+    if(progress > 100)
+      progress = 100;
+
+    printf("%s : %f / %f  = %d\n",type, getDepensesSumByType(type), montant, progress );
+    gtk_list_store_append(list_store_budg, &iter);
+    gtk_list_store_set(list_store_budg, &iter, 0, type, 1, montString, 2, progress,   -1);
+
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box_dep), type);
+  }
 }
 
-
-
-void  test() {
+//GOOD
+void  open_dialog_dep() {
   printf("OPEN DIALOG : ADD DEP \n");
   gtk_widget_show(dialog_dep);
+}
+//GOOD
+void  hide_dialog_dep() {
+  printf("HIDE DIALOG : ADD DEP \n");
+  gtk_widget_hide(dialog_dep);
+}
+
+//GOOD
+void  open_dialog_budg() {
+  printf("OPEN DIALOG : ADD DEP \n");
+  gtk_widget_show(dialog_budg);
+}
+//GOOD
+void  hide_dialog_budg() {
+  printf("HIDE DIALOG : ADD BUDG \n");
+  gtk_widget_hide(dialog_budg);
 }
 
 //Creation de l'interface
@@ -248,25 +299,22 @@ void createWindow(int argc, char ** argv){
 
   gtk_builder_connect_signals(builder, NULL);
 
-  bt_save_dep = GTK_WIDGET(gtk_builder_get_object(builder, "button_dep"));
+  bt_open_dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "bt_dep"));
+  bt_open_dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "bt_budg"));
+
   dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_dep"));
+  dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_budg"));
+
+  combo_box_dep = GTK_WIDGET(gtk_builder_get_object(builder, "combo_box_dep"));
+  input_dep = GTK_WIDGET(gtk_builder_get_object(builder, "entry_dep"));
+  check_box_recu = GTK_WIDGET(gtk_builder_get_object(builder, "check_box_dep_recu"));
+  bt_save_dep = GTK_WIDGET(gtk_builder_get_object(builder, "bt_save_dep"));
   list_store_dep = GTK_LIST_STORE(gtk_builder_get_object(builder, "historique_dep"));
+
+  input_nom_budg = GTK_WIDGET(gtk_builder_get_object(builder, "entry_budg_nom"));
+  input_montant_budg = GTK_WIDGET(gtk_builder_get_object(builder, "entry_budg_montant"));
   list_store_budg = GTK_LIST_STORE(gtk_builder_get_object(builder, "liste_budg"));
-  // list = GTK_WIDGET(gtk_builder_get_object(builder, "tree_view_dep"));
 
-  cx1 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx1"));
-  cx2 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx2"));
-  cx3 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx3"));
-
-  cr1 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr1"));
-  cr2 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr2"));
-  cr3 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr3"));
-
-  cx4 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx1"));
-  cx5 = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx2"));
-
-  cr4 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr1"));
-  cr5 = GTK_CELL_RENDERER(gtk_builder_get_object(builder, "cr2"));
 
   vueDepenses();
 
@@ -339,19 +387,21 @@ void createWindow(int argc, char ** argv){
   gtk_main();
 }
 
-void updateBudgets(struct Budget budg){
-
-  gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box_dep), budg.type);
-  labelBudg[getNbBudgets()-1] = gtk_label_new(displayBudgets(budg));
-  gtk_label_set_use_markup(GTK_LABEL(labelBudg[getNbBudgets()-1]), TRUE);
-  gtk_box_pack_end(GTK_BOX(box_budg), labelBudg[getNbBudgets()-1], FALSE, TRUE, 0);
-  gtk_widget_show_all(window);
-}
-
-
 int main(int argc, char **argv){
-
   bddConnect(db);
+
+  char jour[20];
+  time_t time_raw_format;
+  struct tm * ptr_time;
+  time ( &time_raw_format );
+  ptr_time = localtime ( &time_raw_format );
+  strftime(jour ,50,"%d",ptr_time);
+  printf("DATE : %s\n", jour);
+  //si date egale premier du mois alors
+  if (strcmp(jour, "01") == 0) {
+    printf("PAYMENT TOUTES DEPENSES RECU !\n");
+    paymentDepensesRecu();
+  }
   createWindow(argc, argv);
 
 }

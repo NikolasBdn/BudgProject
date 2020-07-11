@@ -35,9 +35,10 @@ void insertDepense(char *m, char *t){
       printf("ERROR IN INSERTION : DEPENSE\n");
     }else{
       printf("INSERT : DEPENSE\n");
-      displayDepense(list, dep);
-      updateBudgetsMontant();
 
+      // updateBudgets();
+      vueBudgets();
+      vueDepenses();
     }
   }
 }

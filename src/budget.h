@@ -7,7 +7,7 @@ struct Budget{
   char type[100];
 };
 
-void insertBudg(GtkWidget *button, gpointer data);
+void insertBudg(char *montant, char *type);
 struct Budget getBudget(int index);
 struct Budget getBudgetByType(char *type);
 
