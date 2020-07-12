@@ -11,7 +11,6 @@
 #include "depense_recu.h"
 #include "depense.h"
 
-// gcc -Wall src/main.c src/budget.c src/depense.c src/depense_recu.c -o src/main.o  -fno-stack-protector  -lsqlite3 -std=c99  `pkg-config --libs --cflags gtk+-3.0`
 
 GtkWidget *bt_open_dialog_dep, *bt_open_dialog_budg, *bt_new_budg, *bt_save_dep;
 GtkWidget *input_dep, *combo_box_dep, *check_box_recu;
@@ -398,7 +397,7 @@ int main(int argc, char **argv){
   strftime(jour ,50,"%d",ptr_time);
   printf("DATE : %s\n", jour);
   //si date egale premier du mois alors
-  if (strcmp(jour, "01") == 0) {
+  if (strcmp(jour, "12") == 0) {
     printf("PAYMENT TOUTES DEPENSES RECU !\n");
     paymentDepensesRecu();
   }

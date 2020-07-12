@@ -65,6 +65,11 @@ void paymentDepensesRecu(){
   }
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
-      // insertDepense(sqlite3_column_double(stmt, 1), sqlite3_column_text(stmt, 2));
+    char buff[30];
+    gcvt(sqlite3_column_double(stmt, 1), 7, buff);
+    insertDepense(buff, (char *)sqlite3_column_text(stmt, 2));
  }
+
+  vueBudgets();
+  vueDepenses();
 }
