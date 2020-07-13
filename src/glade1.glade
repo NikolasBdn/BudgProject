@@ -464,7 +464,7 @@
         <child>
           <object class="GtkButton" id="bt_budg">
             <property name="label" translatable="yes">Ajouter un budget</property>
-            <property name="width_request">110</property>
+            <property name="width_request">148</property>
             <property name="height_request">35</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -472,8 +472,43 @@
             <signal name="clicked" handler="open_dialog_budg" swapped="no"/>
           </object>
           <packing>
-            <property name="y">368</property>
+            <property name="y">365</property>
           </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="bt_suivi">
+            <property name="label" translatable="yes">Voir le suivie des dépenses</property>
+            <property name="width_request">110</property>
+            <property name="height_request">35</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <signal name="clicked" handler="open_dialog_suivi" swapped="no"/>
+          </object>
+          <packing>
+            <property name="y">404</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkWindow" id="window_suivi">
+    <property name="can_focus">False</property>
+    <property name="default_width">850</property>
+    <property name="default_height">400</property>
+    <child>
+      <object class="GtkFixed">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkDrawingArea" id="draw_suivi">
+            <property name="width_request">850</property>
+            <property name="height_request">400</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <signal name="configure-event" handler="configure_event_cb" swapped="no"/>
+            <signal name="draw" handler="dessinerSuivi" swapped="no"/>
+          </object>
         </child>
       </object>
     </child>

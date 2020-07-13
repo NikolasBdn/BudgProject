@@ -16,15 +16,9 @@ void insertDepense(char *m, char *t){
   dep.montant = atof(m);
   snprintf(dep.type, sizeof(dep.type), "%s", t);
 
-
-  time_t time_raw_format;
-  struct tm * ptr_time;
-  time ( &time_raw_format );
-  ptr_time = localtime ( &time_raw_format );
-  strftime(dep.date,50,"%d/%m/%Y",ptr_time);
-
-  //Si le montant est > 0
-  if (dep.montant > 0) {
+  printf("DEPENSES : %s\n", dep.type);
+  //Si le montant est > 0 et type != null 
+  if (dep.montant > 0 && strcmp(dep.type, "(null)") != 0) {
     char request[80] = "insert into DEPENSES (montantDep, typeDep) values(";
     replacechar(m, ',', '.');
     strcat(request, m);
@@ -35,8 +29,6 @@ void insertDepense(char *m, char *t){
       printf("ERROR IN INSERTION : DEPENSE\n");
     }else{
       printf("INSERT : DEPENSE\n");
-
-      // updateBudgets();
       vueBudgets();
       vueDepenses();
     }

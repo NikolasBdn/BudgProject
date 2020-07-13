@@ -69,7 +69,4 @@ void paymentDepensesRecu(){
     gcvt(sqlite3_column_double(stmt, 1), 7, buff);
     insertDepense(buff, (char *)sqlite3_column_text(stmt, 2));
  }
-
-  vueBudgets();
-  vueDepenses();
 }
