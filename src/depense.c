@@ -17,7 +17,7 @@ void insertDepense(char *m, char *t){
   snprintf(dep.type, sizeof(dep.type), "%s", t);
 
   printf("DEPENSES : %s\n", dep.type);
-  //Si le montant est > 0 et type != null 
+  //Si le montant est > 0 et type != null
   if (dep.montant > 0 && strcmp(dep.type, "(null)") != 0) {
     char request[80] = "insert into DEPENSES (montantDep, typeDep) values(";
     replacechar(m, ',', '.');
@@ -37,10 +37,26 @@ void insertDepense(char *m, char *t){
 
 
 double getDepensesSumByType(char *type){
+
+ time_t timer;
+  struct tm* tm_info;
+  char mois[3];
+  time(&timer);
+  tm_info = localtime(&timer);
+  strftime(mois, 3, "%m", tm_info);
+  printf("%s\n", mois);
+
   sqlite3_stmt *stmt;
-  char a[80] = "select sum(montantDep) from depenses where typeDep = '";
+  char a[150] = "select sum(montantDep) from depenses where typeDep = '";
   strcat(a, type);
   strcat(a, "'");
+
+  strcat(a, " and strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) = '");
+  strcat(a, mois);
+  strcat(a, "'");
+  printf("%s\n", a);
+  char request[150] = "select sum(montantDep) from depenses where typeDep = 'Alimentation' and strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) = '08'";
+
   if (sqlite3_prepare_v2(db, a, -1, &stmt, NULL)) {
     printf("ERROR TO SELECT DATA\n");
     exit(-1);

@@ -1,0 +1,20 @@
+/* window{
+  background-color: #1e2021;
+} */
+
+.view{
+  /* background-color: #21252b; */
+  color: grey;
+}
+
+boutton{
+  background-color: #7bc043;
+}
+
+/* progressbar{
+    background-color: rgba(83, 165, 198, 255);
+} */
+
+.view progressbar{
+    background-color: red;
+}

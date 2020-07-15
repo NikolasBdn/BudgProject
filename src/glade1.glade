@@ -492,23 +492,87 @@
       </object>
     </child>
   </object>
-  <object class="GtkWindow" id="window_suivi">
+  <object class="GtkDialog" id="window_suivi">
     <property name="can_focus">False</property>
-    <property name="default_width">850</property>
-    <property name="default_height">400</property>
+    <property name="resizable">False</property>
+    <property name="type_hint">dialog</property>
+    <property name="deletable">False</property>
     <child>
-      <object class="GtkFixed">
-        <property name="visible">True</property>
+      <placeholder/>
+    </child>
+    <child internal-child="vbox">
+      <object class="GtkBox">
         <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Fermer</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="hide_dialog_suivi" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
         <child>
-          <object class="GtkDrawingArea" id="draw_suivi">
-            <property name="width_request">850</property>
-            <property name="height_request">400</property>
+          <object class="GtkFixed">
+            <property name="width_request">900</property>
+            <property name="height_request">450</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <signal name="configure-event" handler="configure_event_cb" swapped="no"/>
-            <signal name="draw" handler="dessinerSuivi" swapped="no"/>
+            <child>
+              <object class="GtkScrolledWindow" id="view3">
+                <property name="width_request">900</property>
+                <property name="height_request">450</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="margin_top">2</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkViewport">
+                    <property name="width_request">450</property>
+                    <property name="height_request">900</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkDrawingArea" id="draw_suivi">
+                        <property name="width_request">400</property>
+                        <property name="height_request">900</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <signal name="configure-event" handler="configure_event_cd" swapped="no"/>
+                        <signal name="draw" handler="dessinerSuivi" swapped="no"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
         </child>
       </object>
     </child>

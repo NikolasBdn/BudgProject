@@ -21,7 +21,7 @@ GtkWidget *box_all, *box_budg;
 GtkWidget *list, *store;
 GtkWidget *scrolled_window;
 GtkWidget *dialog_dep, *dialog_budg, *dialog_suivi;
-
+GtkWidget *draw_area_suivi;
 GtkListStore *list_store_dep, *list_store_budg;
 GtkTreeViewColumn *cx1, *cx2, *cx3, *cx4, *cx5, *cx6;
 GtkCellRenderer *cr1, *cr2, *cr3, *cr4, *cr5, *cr6;
@@ -160,7 +160,6 @@ void init_list(GtkWidget *list) {
       snprintf(dep.date, sizeof(dep.date), "%s", (char *)sqlite3_column_text(stmt, 3));
 
       displayDepense(list, dep);
-      // printf("%s : %.2f\n", sqlite3_column_text(stmt, 2), sqlite3_column_double(stmt, 0));
     }
   }
 
@@ -187,105 +186,176 @@ gtk_widget_get_allocated_height (widget));
 clear_surface ();
 }
 
-
-void dessinerSuiviProto(GtkWidget *widget, cairo_t *cr, gpointer data){
-
-sqlite3_stmt *stmt;
-char request[60] = "select * from budgets";
-
-
-if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
-  printf("ERROR TO SELECT DATA : getBudget\n");
-  exit(-1);
-}
-
-
-guint width, height;
-GdkRGBA color;
-GtkStyleContext *context;
-
-context = gtk_widget_get_style_context (widget);
-
-width = gtk_widget_get_allocated_width (widget);
-height = gtk_widget_get_allocated_height (widget);
-
-
-int i = 0;
-while(sqlite3_step(stmt) == SQLITE_ROW){
-  double depType = getDepensesSumByType((char *)sqlite3_column_text(stmt, 2));
-  printf("%s = %f\n",sqlite3_column_text(stmt, 2), depType);
-
-  cairo_rectangle (cr, 10 + ( i++ * 50), 250, 40, 1 - (depType / 2));
-
-  gtk_style_context_get_color (context,
-    gtk_style_context_get_state (context),
-    &color);
-    color.red = 200;
-    gdk_cairo_set_source_rgba (cr, &color);
-    cairo_fill (cr);
-  }
-}
-
 void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
+  GdkRGBA color;
+
+  GtkStyleContext *context;
+    context = gtk_widget_get_style_context (widget);
+
+  char colorsTab[11][8]={
+    "#7CFC00",
+    "#ED3811",
+    "#8B20A8",
+    "#F3F00A",
+    "#0A94F3",
+    "#F30AD3",
+    "#F30A11",
+    "#EFE9E9",
+    "#2AFC08",
+    "#15F3D7",
+    "#4EE49E"
+  };
 
   sqlite3_stmt *stmt;
-  char request[200] = "SELECT strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch') ) from DEPENSES where idDep = 1 ";
-
+  int b = 0;
+  // char request[200] = "SELECT idDep, typeDep from DEPENSES group by typeDep";
+  // if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
+  //   printf("ERROR TO SELECT DATA : SUIVI\n");
+  //   exit(-1);
+  // }
+  char request[200] = "SELECT idBudg, typeBudg from BUDGETS group by typeBudg order by idBudg";
   if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
     printf("ERROR TO SELECT DATA : SUIVI\n");
     exit(-1);
   }
 
-  sqlite3_step(stmt);
-    int h = 0;
+  /**
+  Creation de l'interface du graphique: axes, graduations et legendes
+  **/
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    cairo_set_source_rgb (cr, 250, 250, 250);
+    printf("VALUE: %d\n", (288 + ((b + 1) * 10)));
+    if ((288 + ((b + 1) * 10)) < 400) {
+      cairo_rectangle (cr, 10, 288 + (b++ * 10), 15, 15);
+      cairo_move_to (cr, 30  , 290 + (b++ * 10));
+
+    }else{
+      cairo_rectangle (cr, 110, 288 + (b++ * 10), 15, 15);
+      cairo_move_to (cr, 130, 290 + (b++ * 10));
+    }
+    cairo_set_font_size (cr, 12);
+    cairo_show_text (cr, (char *)sqlite3_column_text(stmt, 1));
 
 
-  for (int i = sqlite3_column_int(stmt, 0); i < 12; i++) {
+    gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt, 0) - 1]);
+    gdk_cairo_set_source_rgba (cr, &color);
+    cairo_fill (cr);
+
+    cairo_stroke (cr);
+  }
+
+
+  cairo_set_source_rgba (cr, 200, 200, 200, 0.5);
+  //abscisse
+  cairo_move_to (cr, 0, 256);
+  cairo_line_to (cr, 900, 256);
+  //ordonnée
+  cairo_move_to (cr, 40, 5);
+  cairo_line_to (cr, 40, 270);
+
+  //graduation de montant par 50€
+  int graduation = 50;
+  for (int l = 1; l < 12; l++) {
+    cairo_move_to (cr, 35, 255 - graduation / 2 * l);
+    cairo_line_to (cr, 40, 255 - graduation / 2 * l);
+    char graduValeur[20];
+    snprintf(graduValeur, sizeof(graduValeur), "%d", graduation * l);
+    cairo_move_to (cr, 10  , 260 - graduation / 2 * l);
+    cairo_set_font_size (cr, 12);
+    cairo_show_text (cr, graduValeur);
+  }
+
+  sqlite3_stmt *stmt1;
+  char request2[200] = "SELECT strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) from DEPENSES where idDep = 1 ";
+  if (sqlite3_prepare_v2(db, request2, -1, &stmt1, NULL)) {
+    printf("ERROR TO SELECT DATA : SUIVI\n");
+    exit(-1);
+  }
+
+  sqlite3_step(stmt1);
+  int h = 0;
+  int colonnePrec = 0;
+
+  for (int i = sqlite3_column_int(stmt1, 0); i < 12; i++) {
     char nums[10];
-    snprintf(nums, sizeof(nums), "%d", i);
+    char buffNum[3];
+    if (i < 10) {
+      strcat(nums, "0");
+      snprintf(buffNum, sizeof(buffNum), "%d", i);
+      strcat(nums, buffNum);
+    }else{
+      snprintf(nums, sizeof(nums), "%d", i);
+    }
 
     sqlite3_stmt *stmt2;
-    char request[200] = "SELECT typeBudg, sum(montantDep), dateDep from BUDGETS INNER JOIN DEPENSES on typeBudg = typeDep where strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch') ) = '0";
+    char request[200] = "SELECT typeBudg, sum(montantDep), dateDep, idBudg from BUDGETS INNER JOIN DEPENSES on typeBudg = typeDep where strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch') ) = '";
+
     strcat(request, nums);
     strcat(request,"' group by typeBudg");
+    snprintf(nums, sizeof(nums), "%s", "");//on vide la var nums pour eviter que les chaines ne restent dedans
 
-    // printf("%s\n", request);
+    printf("%s\n", request);
     if (sqlite3_prepare_v2(db, request, -1, &stmt2, NULL)) {
       printf("ERROR TO SELECT DATA : SUIVI\n");
       exit(-1);
     }
 
-    guint width, height;
-    GdkRGBA color;
-    GtkStyleContext *context;
-
-    context = gtk_widget_get_style_context (widget);
-
-    width = gtk_widget_get_allocated_width (widget);
-    height = gtk_widget_get_allocated_height (widget);
+    // guint width, height;
 
     int j = 0;
 
+
     while (sqlite3_step(stmt2) == SQLITE_ROW) {
+      // cairo_set_line_width (cr, 1);
+      cairo_stroke (cr);
 
-      // printf("SQL ROW : %d %d\n", SQLITE_ROW, sqlite3_step(stmt2));
-        double depType = sqlite3_column_double(stmt2, 1);
-        printf("%s = %f\n",sqlite3_column_text(stmt2, 0), depType);
-printf("H %d\n", h);
-        cairo_rectangle (cr, 10 + (j++ * 15) + (h * 50) , 250, 10, 1 - (depType / 2));
+      double depType = sqlite3_column_double(stmt2, 1);
+      cairo_rectangle (cr, j++ * 16 + 50 + (h * 40 + (colonnePrec * 15)), 255, 10,  -((depType + 1) / 2));
+      // if ((265 + (j * 20)) >= 380) {
+      //   cairo_rectangle (cr, 120, 167 + (j * 20), 15, 15);
+      //
+      // }else{
+      //   cairo_rectangle (cr, 10, 265 + (j * 20), 15, 15);
+      // }
 
-        gtk_style_context_get_color (context,
-                                     gtk_style_context_get_state (context),
-                                     &color);
-        color.red = 200;
-        gdk_cairo_set_source_rgba (cr, &color);
-        cairo_fill (cr);
+      gtk_style_context_get_color (context,
+        gtk_style_context_get_state (context),
+        &color);
+
+      gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt2, 3) - 1]);
+      gdk_cairo_set_source_rgba (cr, &color);
+      cairo_fill (cr);
     }
 
+    //Afficher graduations du mois ssi il y a des budget dans le mois
+    if (j > 0) {
+      int decalage;
+
+      int numMois = i;
+      char sMois[12];
+      snprintf(sMois, sizeof(sMois), "%d", numMois);
+      cairo_set_source_rgba (cr, 200, 200, 200, 0.5);
+
+      //si nb budget pair plasser graduation du mois au millieu de deux budget si impair au centre du budget
+      if (j % 2 == 0) {
+        decalage = (j / 2) * 15 + 50 + (h * 40 + ( colonnePrec  * 15));
+      }else{
+        decalage = (j / 2) * 15 + 55 + (h * 40 + ( colonnePrec  * 15));
+      }
+
+      cairo_move_to (cr, decalage, 257);
+      cairo_line_to (cr, decalage, 262);
+
+      cairo_move_to (cr, decalage - 4, 275);
+      cairo_set_font_size (cr, 12);
+      cairo_show_text (cr, sMois);
+      cairo_stroke (cr);
+    }
+    printf("MOIS %d : %d\n", i, j);
+    colonnePrec += j;
     h++;
   }
 }
-
 
   //GOOD
   void newBudget(GtkWidget *button, gpointer data){
@@ -308,8 +378,6 @@ printf("H %d\n", h);
     char t[20];
     snprintf(t, sizeof(t), "%s", (char *)gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(combo_box_dep)));
 
-    // testRecu();
-
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check_box_recu))){
       printf("DEPENSE RECURRENTE\n");
       insertDepenseRecu(m, t);
@@ -317,7 +385,6 @@ printf("H %d\n", h);
       printf("DEPENSE\n");
       insertDepense(m, t);
     }
-    // gtk_entry_set_text(GTK_ENTRY(input_dep), "");
   }
 
   //GOOD
@@ -412,13 +479,13 @@ printf("H %d\n", h);
 
   //GOOD
   void  open_dialog_suivi() {
-    printf("OPEN DIALOG : ADD SUIVI \n");
+    printf("OPEN DIALOG : SUIVI \n");
     gtk_widget_show(dialog_suivi);
   }
 
   //GOOD
   void  hide_dialog_suivi() {
-    printf("HIDE DIALOG : ADD BUDG \n");
+    printf("HIDE DIALOG : SUIVI \n");
     gtk_widget_hide(dialog_suivi);
   }
 
@@ -437,6 +504,12 @@ printf("H %d\n", h);
 
     gtk_builder_connect_signals(builder, NULL);
 
+    GtkCssProvider *cssProvider = gtk_css_provider_new();
+    gtk_css_provider_load_from_path(cssProvider, "style.css", NULL);
+    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+                               GTK_STYLE_PROVIDER(cssProvider),
+                               GTK_STYLE_PROVIDER_PRIORITY_USER);
+
     bt_open_dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "bt_dep"));
     bt_open_dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "bt_budg"));
     bt_open_dialog_suivie = GTK_WIDGET(gtk_builder_get_object(builder, "bt_suivi"));
@@ -445,6 +518,9 @@ printf("H %d\n", h);
     dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_budg"));
     dialog_suivi = GTK_WIDGET(gtk_builder_get_object(builder, "window_suivi"));
     gtk_window_set_position(GTK_WINDOW(dialog_suivi), GTK_WIN_POS_CENTER);
+
+    draw_area_suivi = GTK_WIDGET(gtk_builder_get_object(builder, "draw_suivi"));
+    // g_signal_connect(G_OBJECT(draw_area_suivi), "expose_event", G_CALLBACK(dessinerSuivi), NULL);
 
     combo_box_dep = GTK_WIDGET(gtk_builder_get_object(builder, "combo_box_dep"));
     input_dep = GTK_WIDGET(gtk_builder_get_object(builder, "entry_dep"));
