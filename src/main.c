@@ -21,7 +21,7 @@ GtkWidget *box_all, *box_budg;
 GtkWidget *list, *store;
 GtkWidget *scrolled_window;
 GtkWidget *dialog_dep, *dialog_budg, *dialog_suivi;
-GtkWidget *draw_area_suivi;
+GtkWidget *draw_area_suivi, *progress_bar_total;
 GtkListStore *list_store_dep, *list_store_budg;
 GtkTreeViewColumn *cx1, *cx2, *cx3, *cx4, *cx5, *cx6;
 GtkCellRenderer *cr1, *cr2, *cr3, *cr4, *cr5, *cr6;
@@ -300,23 +300,13 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       exit(-1);
     }
 
-    // guint width, height;
-
     int j = 0;
 
-
     while (sqlite3_step(stmt2) == SQLITE_ROW) {
-      // cairo_set_line_width (cr, 1);
       cairo_stroke (cr);
 
       double depType = sqlite3_column_double(stmt2, 1);
       cairo_rectangle (cr, j++ * 16 + 50 + (h * 40 + (colonnePrec * 15)), 255, 10,  -((depType + 1) / 2));
-      // if ((265 + (j * 20)) >= 380) {
-      //   cairo_rectangle (cr, 120, 167 + (j * 20), 15, 15);
-      //
-      // }else{
-      //   cairo_rectangle (cr, 10, 265 + (j * 20), 15, 15);
-      // }
 
       gtk_style_context_get_color (context,
         gtk_style_context_get_state (context),
@@ -406,8 +396,15 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       montant = montant/100;
       char type[20];
       char date[20];
+      time_t rawtime = atol((char *)sqlite3_column_text(stmt, 3));
+      struct tm  ts;
+      char       buf[20];
+      ts = *localtime(&rawtime);
+      strftime(buf, sizeof(buf), "%d/%m/%Y", &ts);
+      printf("%s\n", buf);
+
       snprintf(type, sizeof(type), "%s", (char *)sqlite3_column_text(stmt, 2));
-      snprintf(date, sizeof(date), "%s", (char *)sqlite3_column_text(stmt, 3));
+      snprintf(date, sizeof(date), "%s", buf);
       gtk_list_store_append(list_store_dep, &iter);
       gtk_list_store_set(list_store_dep, &iter, 0, type, 1, montant, 2, date, -1);
     }
@@ -417,6 +414,9 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
   void vueBudgets(){
     GtkTreeIter iter;
     sqlite3_stmt *stmt;
+    float total_dep;
+    float total_budg;
+
     char request[60] = "select * from BUDGETS";
 
     if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
@@ -442,6 +442,8 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       strcat(montString, bufferMont);
       printf("%s\n", montString);
 
+      total_dep += getDepensesSumByType(type);
+      total_budg += montant;
       int progress = (getDepensesSumByType(type) * 100) / montant;
 
       if(progress > 100)
@@ -453,6 +455,7 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
 
       gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box_dep), type);
     }
+    gtk_progress_bar_set_fraction ((GtkProgressBar *)progress_bar_total, (total_dep / total_budg));
   }
 
   //GOOD
@@ -513,6 +516,7 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     bt_open_dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "bt_dep"));
     bt_open_dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "bt_budg"));
     bt_open_dialog_suivie = GTK_WIDGET(gtk_builder_get_object(builder, "bt_suivi"));
+    progress_bar_total = GTK_WIDGET(gtk_builder_get_object(builder, "progress_total"));
 
     dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_dep"));
     dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_budg"));

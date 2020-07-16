@@ -437,15 +437,16 @@
           </packing>
         </child>
         <child>
-          <object class="GtkProgressBar">
-            <property name="width_request">294</property>
+          <object class="GtkProgressBar" id="progress_total">
+            <property name="width_request">288</property>
             <property name="height_request">28</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="pulse_step">0.0099999997764825821</property>
           </object>
           <packing>
-            <property name="x">18</property>
-            <property name="y">86</property>
+            <property name="x">16</property>
+            <property name="y">92</property>
           </packing>
         </child>
         <child>
@@ -535,16 +536,36 @@
         </child>
         <child>
           <object class="GtkFixed">
+            <property name="width_request">900</property>
+            <property name="height_request">450</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkDrawingArea" id="draw_suivi">
-                <property name="width_request">850</property>
-                <property name="height_request">400</property>
+              <object class="GtkScrolledWindow" id="view3">
+                <property name="width_request">900</property>
+                <property name="height_request">450</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <signal name="configure-event" handler="configure_event_cd" swapped="no"/>
-                <signal name="draw" handler="dessinerSuivi" swapped="no"/>
+                <property name="can_focus">True</property>
+                <property name="margin_top">2</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkViewport">
+                    <property name="width_request">450</property>
+                    <property name="height_request">900</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkDrawingArea" id="draw_suivi">
+                        <property name="width_request">400</property>
+                        <property name="height_request">900</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <signal name="configure-event" handler="configure_event_cd" swapped="no"/>
+                        <signal name="draw" handler="dessinerSuivi" swapped="no"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
           </object>

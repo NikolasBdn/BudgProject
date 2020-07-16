@@ -1,42 +1,17 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-
+#include <time.h>
 
 int main(int argc, char const *argv[]) {
-#define NUMBER_OF_STRING 11
-#define MAX_STRING_SIZE 8
+ time_t rawtime = atol("1262304000");
+    struct tm  ts;
+    char       buf[80];
 
-// char arr[NUMBER_OF_STRING][MAX_STRING_SIZE] =
-// {
-//   "#lllll",
-//   "#ED3811"
-// };
-// char arr[NUMBER_OF_STRING][MAX_STRING_SIZE];
-  char arr[NUMBER_OF_STRING][MAX_STRING_SIZE]={
-    "#7CFC00",
-    "#ED3811",
-    "#8B20A8",
-    "#F3F00A",
-    "#0A94F3",
-    "#F30AD3",
-    "#F30A11",
-    "#EFE9E9",
-    "#2AFC08",
-    "#15F3D7",
-    "#4EE49E"
-  };
-// for (int j = 0; j < NUMBER_OF_STRING; j++) {
-//   for (int h = 0; h < MAX_STRING_SIZE; h++) {
-//     arr[j][h] = 'l';
-//   }
-// }
+    // Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+    ts = *localtime(&rawtime);
+    strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", &ts);
+    printf("%s\n", buf);
 
-
-for (int i = 0; i < NUMBER_OF_STRING; i++)
-{
-    printf("'%s' has length %ld\n", arr[i], strlen(arr[i]));
-}
   return 0;
 }

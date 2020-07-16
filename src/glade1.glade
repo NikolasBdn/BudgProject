@@ -437,15 +437,16 @@
           </packing>
         </child>
         <child>
-          <object class="GtkProgressBar">
-            <property name="width_request">294</property>
+          <object class="GtkProgressBar" id="progress_total">
+            <property name="width_request">288</property>
             <property name="height_request">28</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="show_text">True</property>
           </object>
           <packing>
-            <property name="x">18</property>
-            <property name="y">86</property>
+            <property name="x">16</property>
+            <property name="y">92</property>
           </packing>
         </child>
         <child>
