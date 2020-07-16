@@ -22,7 +22,7 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="bt_save_dep1">
+              <object class="GtkButton" id="bt_save_budg">
                 <property name="label" translatable="yes">AJouter</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -36,7 +36,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="bt_close_budg">
                 <property name="label" translatable="yes">Annuler</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -160,7 +160,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="bt_close_dep">
                 <property name="label" translatable="yes">Annuler</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -364,11 +364,11 @@
           </object>
           <packing>
             <property name="x">536</property>
-            <property name="y">65</property>
+            <property name="y">55</property>
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="label_dep">
             <property name="width_request">100</property>
             <property name="height_request">28</property>
             <property name="visible">True</property>
@@ -376,8 +376,8 @@
             <property name="label" translatable="yes">Mes dépenses</property>
           </object>
           <packing>
-            <property name="x">670</property>
-            <property name="y">29</property>
+            <property name="x">654</property>
+            <property name="y">16</property>
           </packing>
         </child>
         <child>
@@ -433,7 +433,7 @@
             </child>
           </object>
           <packing>
-            <property name="y">140</property>
+            <property name="y">132</property>
           </packing>
         </child>
         <child>
@@ -442,15 +442,15 @@
             <property name="height_request">28</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="pulse_step">0.0099999997764825821</property>
+            <property name="show_text">True</property>
           </object>
           <packing>
             <property name="x">16</property>
-            <property name="y">92</property>
+            <property name="y">55</property>
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="label_mes_budg">
             <property name="width_request">98</property>
             <property name="height_request">29</property>
             <property name="visible">True</property>
@@ -458,8 +458,8 @@
             <property name="label" translatable="yes">Mes budgets</property>
           </object>
           <packing>
-            <property name="x">101</property>
-            <property name="y">33</property>
+            <property name="x">98</property>
+            <property name="y">96</property>
           </packing>
         </child>
         <child>
@@ -473,7 +473,7 @@
             <signal name="clicked" handler="open_dialog_budg" swapped="no"/>
           </object>
           <packing>
-            <property name="y">365</property>
+            <property name="y">363</property>
           </packing>
         </child>
         <child>
@@ -487,7 +487,20 @@
             <signal name="clicked" handler="open_dialog_suivi" swapped="no"/>
           </object>
           <packing>
-            <property name="y">404</property>
+            <property name="y">403</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="label_budg">
+            <property name="width_request">100</property>
+            <property name="height_request">24</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Budget total</property>
+          </object>
+          <packing>
+            <property name="x">98</property>
+            <property name="y">16</property>
           </packing>
         </child>
       </object>
@@ -511,7 +524,7 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="bt_close_suivi">
                 <property name="label" translatable="yes">Fermer</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>

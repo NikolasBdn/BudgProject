@@ -414,8 +414,8 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
   void vueBudgets(){
     GtkTreeIter iter;
     sqlite3_stmt *stmt;
-    float total_dep;
-    float total_budg;
+    float total_dep = 0;
+    float total_budg = 0;
 
     char request[60] = "select * from BUDGETS";
 
@@ -440,7 +440,7 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       char bufferMont[50];
       gcvt(montant, 5, bufferMont);
       strcat(montString, bufferMont);
-      printf("%s\n", montString);
+      // printf("%s\n", montString);
 
       total_dep += getDepensesSumByType(type);
       total_budg += montant;
@@ -449,13 +449,15 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       if(progress > 100)
         progress = 100;
 
-      printf("%s : %f / %f  = %d\n",type, getDepensesSumByType(type), montant, progress );
+      // printf("%s : %f / %f  = %d\n",type, getDepensesSumByType(type), montant, progress );
       gtk_list_store_append(list_store_budg, &iter);
       gtk_list_store_set(list_store_budg, &iter, 0, type, 1, montString, 2, progress,   -1);
 
       gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box_dep), type);
     }
+    printf("PROGRESS BAR: %f\n", (total_dep / total_budg) );
     gtk_progress_bar_set_fraction ((GtkProgressBar *)progress_bar_total, (total_dep / total_budg));
+
   }
 
   //GOOD
@@ -513,16 +515,46 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
                                GTK_STYLE_PROVIDER(cssProvider),
                                GTK_STYLE_PROVIDER_PRIORITY_USER);
 
+   GtkWidget *titre_budg = GTK_WIDGET(gtk_builder_get_object(builder, "label_budg"));
+   GtkWidget *titre_mes_budg = GTK_WIDGET(gtk_builder_get_object(builder, "label_mes_budg"));
+   GtkWidget *titre_dep = GTK_WIDGET(gtk_builder_get_object(builder, "label_dep"));
+   //CSS
+   gtk_widget_set_name (titre_budg,"titre");
+   gtk_widget_set_name (titre_mes_budg,"titre");
+   gtk_widget_set_name (titre_dep,"titre");
+
+
     bt_open_dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "bt_dep"));
     bt_open_dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "bt_budg"));
     bt_open_dialog_suivie = GTK_WIDGET(gtk_builder_get_object(builder, "bt_suivi"));
     progress_bar_total = GTK_WIDGET(gtk_builder_get_object(builder, "progress_total"));
+    //CSS
+    gtk_widget_set_name(bt_open_dialog_dep, "bt_ok");
+    gtk_widget_set_name(progress_bar_total, "progressbar_total");
+    //CSS
+    GtkWidget * bt_close_dep = GTK_WIDGET(gtk_builder_get_object(builder, "bt_close_dep"));
+    GtkWidget * bt_close_budg = GTK_WIDGET(gtk_builder_get_object(builder, "bt_close_budg"));
+    GtkWidget * bt_close_suivi = GTK_WIDGET(gtk_builder_get_object(builder, "bt_close_suivi"));
+    gtk_widget_set_name (bt_close_dep,"bt_close");
+    gtk_widget_set_name (bt_close_budg,"bt_close");
+    gtk_widget_set_name (bt_close_suivi,"bt_close");
+
+    //CSS
+    GtkWidget * bt_save_dep = GTK_WIDGET(gtk_builder_get_object(builder, "bt_save_dep"));
+    GtkWidget * bt_save_budg = GTK_WIDGET(gtk_builder_get_object(builder, "bt_save_budg"));
+    gtk_widget_set_name (bt_save_dep,"bt_ok");
+    gtk_widget_set_name (bt_save_budg, "bt_ok");
 
     dialog_dep = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_dep"));
     dialog_budg = GTK_WIDGET(gtk_builder_get_object(builder, "dialog_budg"));
     dialog_suivi = GTK_WIDGET(gtk_builder_get_object(builder, "window_suivi"));
+
     gtk_window_set_position(GTK_WINDOW(dialog_suivi), GTK_WIN_POS_CENTER);
 
+    //CSS
+    gtk_widget_set_name (bt_close_dep,"bt_close");
+    gtk_widget_set_name (bt_close_budg,"bt_close");
+    gtk_widget_set_name (bt_close_suivi,"bt_close");
     draw_area_suivi = GTK_WIDGET(gtk_builder_get_object(builder, "draw_suivi"));
     // g_signal_connect(G_OBJECT(draw_area_suivi), "expose_event", G_CALLBACK(dessinerSuivi), NULL);
 
@@ -555,7 +587,7 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     time ( &time_raw_format );
     ptr_time = localtime ( &time_raw_format );
     strftime(jour ,50,"%d",ptr_time);
-    printf("DATE : %s\n", jour);
+    // printf("DATE : %s\n", jour);
     //si date egale premier du mois alors
     if (strcmp(jour, "13") == 0) {
       printf("PAYMENT TOUTES DEPENSES RECU !\n");
