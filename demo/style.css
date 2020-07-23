@@ -1,33 +1,39 @@
-/*
 window{
   color: #cccccc;
   font-size: 14px;
 }
-
 .dialog{
   color: #cccccc;
   font-size: 14px;
 }
+
 
 label#titre{
   font-size: 20px;
   font-weight: bold;
 }
 
+
 progressbar {
     color: #cccccc;
     font-size: 15px;
 }
 
+
 .view{
+  background-color: #21252d;
   color: #b3b3b3;
 }
-
 treeview.view header button {
    color: #DCDCDC;
    background: #21252d;
    font-weight: bold;
-}
+   /* text-shadow: none; */
+   /* box-shadow: none;  */
+ }
+/* .text-button{
+  background-color: red;
+} */
 
 button{
   background-color: #1a1e24;
@@ -42,7 +48,10 @@ button#bt_close{
   color: #15181d;
 }
 
+/* progressbar{
+    background-color: rgba(83, 165, 198, 255);
+} */
+
 .view progressbar{
     background-color: red;
 }
-**/

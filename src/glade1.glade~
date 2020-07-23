@@ -272,6 +272,10 @@
       <column type="gfloat"/>
       <!-- column-name Date -->
       <column type="gchararray"/>
+      <!-- column-name Supprimer -->
+      <column type="gboolean"/>
+      <!-- column-name Id -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkListStore" id="liste_budg">
@@ -281,6 +285,10 @@
       <!-- column-name Montant -->
       <column type="gchararray"/>
       <!-- column-name Progression -->
+      <column type="gint"/>
+      <!-- column-name Supprimer -->
+      <column type="gboolean"/>
+      <!-- column-name Id -->
       <column type="gint"/>
     </columns>
   </object>
@@ -319,7 +327,7 @@
             <property name="margin_top">2</property>
             <property name="shadow_type">in</property>
             <child>
-              <object class="GtkTreeView" id="tree_view_dep">
+              <object class="GtkTreeView" id="treeview_dep">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="model">historique_dep</property>
@@ -359,6 +367,31 @@
                     </child>
                   </object>
                 </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="cx7">
+                    <property name="title" translatable="yes">Supprimer</property>
+                    <child>
+                      <object class="GtkCellRendererToggle" id="cr7">
+                        <signal name="toggled" handler="testToggled" object="historique_dep" swapped="no"/>
+                      </object>
+                      <attributes>
+                        <attribute name="active">3</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="cx8">
+                    <property name="title" translatable="yes">Id</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="cr8"/>
+                      <attributes>
+                        <attribute name="background-gdk">4</attribute>
+                        <attribute name="text">4</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
           </object>
@@ -382,7 +415,7 @@
         </child>
         <child>
           <object class="GtkScrolledWindow" id="view2">
-            <property name="width_request">326</property>
+            <property name="width_request">417</property>
             <property name="height_request">219</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -429,6 +462,20 @@
                     </child>
                   </object>
                 </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="cx9">
+                    <property name="title" translatable="yes">Supprimer</property>
+                    <property name="expand">True</property>
+                    <child>
+                      <object class="GtkCellRendererToggle" id="cr9">
+                        <signal name="toggled" handler="testToggled" object="liste_budg" swapped="no"/>
+                      </object>
+                      <attributes>
+                        <attribute name="active">3</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
           </object>
@@ -445,8 +492,8 @@
             <property name="show_text">True</property>
           </object>
           <packing>
-            <property name="x">16</property>
-            <property name="y">55</property>
+            <property name="x">63</property>
+            <property name="y">63</property>
           </packing>
         </child>
         <child>
@@ -458,8 +505,8 @@
             <property name="label" translatable="yes">Mes budgets</property>
           </object>
           <packing>
-            <property name="x">98</property>
-            <property name="y">96</property>
+            <property name="x">159</property>
+            <property name="y">100</property>
           </packing>
         </child>
         <child>
@@ -499,8 +546,23 @@
             <property name="label" translatable="yes">Budget total</property>
           </object>
           <packing>
-            <property name="x">98</property>
-            <property name="y">16</property>
+            <property name="x">153</property>
+            <property name="y">22</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="bt_suppr">
+            <property name="label" translatable="yes">Supprimer</property>
+            <property name="width_request">110</property>
+            <property name="height_request">35</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <signal name="clicked" handler="suppr" swapped="no"/>
+          </object>
+          <packing>
+            <property name="x">773</property>
+            <property name="y">403</property>
           </packing>
         </child>
       </object>
@@ -569,8 +631,8 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkDrawingArea" id="draw_suivi">
-                        <property name="width_request">400</property>
-                        <property name="height_request">900</property>
+                        <property name="width_request">1300</property>
+                        <property name="height_request">600</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <signal name="configure-event" handler="configure_event_cd" swapped="no"/>

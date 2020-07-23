@@ -19,7 +19,7 @@ void insertDepense(char *m, char *t){
   printf("DEPENSES : %s\n", dep.type);
   //Si le montant est > 0 et type != null
   if (dep.montant > 0 && strcmp(dep.type, "(null)") != 0) {
-    char request[80] = "insert into DEPENSES (montantDep, typeDep) values(";
+    char request[80] = "insert into DEPENSES (dateDep, montantDep, typeDep) values(1598918400,";
     replacechar(m, ',', '.');
     strcat(request, m);
     strcat(request,", '");
@@ -35,21 +35,6 @@ void insertDepense(char *m, char *t){
   }
 }
 
-void deleteDepense(int id){
-  char buffId[10];
-  printf("SUPPRIMER %d\n", id);
-  char request[80] = "DELETE from DEPENSES where idDep =";
-  snprintf(buffId, sizeof(buffId), "%d", id);
-  strcat(request, buffId);
-  printf("%s\n", request);
-
-  if(sqlite3_exec(db, request, NULL, NULL, NULL)){
-    printf("ERROR IN DELETE : DEPENSE\n");
-  }else{
-    vueBudgets();
-    vueDepenses();
-  }
-}
 
 double getDepensesSumByType(char *type){
 
@@ -69,7 +54,7 @@ double getDepensesSumByType(char *type){
   strcat(a, " and strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) = '");
   strcat(a, mois);
   strcat(a, "'");
-  // printf("%s\n", a);
+  printf("%s\n", a);
   char request[150] = "select sum(montantDep) from depenses where typeDep = 'Alimentation' and strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) = '08'";
 
   if (sqlite3_prepare_v2(db, a, -1, &stmt, NULL)) {
@@ -90,50 +75,4 @@ int replacechar(char *str, char orig, char rep) {
         n++;
     }
     return n;
-}
-
-int getDateDerniereDep(){
-  sqlite3_stmt *stmt;
-  char a[150] = "select  strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) from depenses order by dateDep DESC";
-
-  if (sqlite3_prepare_v2(db, a, -1, &stmt, NULL)) {
-    printf("ERROR TO SELECT DATA\n");
-    exit(-1);
-  }
-
-  sqlite3_step(stmt);
-  printf("LAST DEP: %d\n", sqlite3_column_int(stmt, 0));
-  return sqlite3_column_int(stmt, 0);
-}
-
-int getDatePremiereDep(){
-  sqlite3_stmt *stmt;
-  char a[150] = "select  strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) from depenses order by strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch'))";
-
-  if (sqlite3_prepare_v2(db, a, -1, &stmt, NULL)) {
-    printf("ERROR TO SELECT DATA\n");
-    exit(-1);
-  }
-
-  sqlite3_step(stmt);
-  printf("FISt DEP: %d\n", sqlite3_column_int(stmt, 0));
-  return sqlite3_column_int(stmt, 0);
-}
-
-
-int getNbMois(){
-  int nb = 0;
-    sqlite3_stmt *stmt;
-    char a[150] = "SELECT * from DEPENSES GROUP by strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch'))";
-
-    if (sqlite3_prepare_v2(db, a, -1, &stmt, NULL)) {
-      printf("ERROR TO SELECT DATA\n");
-      exit(-1);
-    }
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-      nb++;
-    }
-
-    printf("NB MOIS DEP: %d\n", nb);
-    return nb;
 }

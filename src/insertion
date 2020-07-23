@@ -1,0 +1,6 @@
+insert into DEPENSES (montantDep, typeDep, dateDep) values (135, 'Alimentation', 1577836800);
+insert into DEPENSES (montantDep, typeDep, dateDep) values (54, 'Alimentation', 1580515200);
+insert into DEPENSES (montantDep, typeDep, dateDep) values (75, 'Alimentation', 1583020800);
+insert into DEPENSES (montantDep, typeDep, dateDep) values (200, 'Alimentation', 1585785600);
+insert into DEPENSES (montantDep, typeDep, dateDep) values (150, 'Alimentation', 1588291200);
+insert into DEPENSES (montantDep, typeDep, dateDep) values (140, 'Alimentation', 1590969600);

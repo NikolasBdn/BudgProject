@@ -23,9 +23,8 @@ GtkWidget *scrolled_window;
 GtkWidget *dialog_dep, *dialog_budg, *dialog_suivi;
 GtkWidget *draw_area_suivi, *progress_bar_total;
 GtkListStore *list_store_dep, *list_store_budg;
-GtkCellRendererToggle *toggle; 
-
-GtkCellRenderer *cell;
+GtkTreeViewColumn *cx1, *cx2, *cx3, *cx4, *cx5, *cx6;
+GtkCellRenderer *cr1, *cr2, *cr3, *cr4, *cr5, *cr6;
 
 sqlite3 *db;
 
@@ -43,15 +42,13 @@ char colorsTab[11][8]={
   "#4EE49E"
 };
 
-static char **colors;
-
 /* Surface to store current scribbles */
 static cairo_surface_t *surface = NULL;
 
+
 //GOOD
-void bddConnect(char *nomBdd){
-  printf("BDD: %s\n", nomBdd);
-  if (sqlite3_open(nomBdd, &db)) {
+void bddConnect(){
+  if (sqlite3_open("the.db", &db)) {
     printf("Could not open the.db\n");
     exit(-1);
   }
@@ -71,7 +68,7 @@ void bddConnect(char *nomBdd){
   }
 
 
-  if (sqlite3_exec(db, "create table DEPENSESRECURRENTE (idDepRecu integer primary key autoincrement, montantDepRecu int not null, typeDepRecu varchar(20), dateDepRecu date default (strftime('%s', 'now')), dernierPaiment varchar(10))", NULL, NULL, NULL)) {
+  if (sqlite3_exec(db, "create table DEPENSESRECURRENTE (idDepRecu integer primary key autoincrement, montantDepRecu int not null, typeDepRecu varchar(20), dateDepRecu date default (STRFTIME('%d/%m/%Y', 'NOW','localtime')))", NULL, NULL, NULL)) {
     printf("Error executing sql statement\n");
   }
   else {
@@ -98,41 +95,63 @@ void configure_event_cb(GtkWidget *widget, GdkEventConfigure *event, gpointer da
   clear_surface ();
 }
 
-void genRandomColor(){
-  char *alphanum = "0123456789ABCDEF";
-  char **tabBudgColor = malloc (sizeof (char *) * 10);
-  char s[7];
-  int nbBudg;
-
-  sqlite3_stmt *stmt;
-  char request[200] = "SELECT count(*) from BUDGETS";
-
-  if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
-    printf("ERROR TO SELECT DATA : BUDGETS RANDOM COLOR\n");
-    exit(-1);
-  }
-  sqlite3_step(stmt);
-  nbBudg = sqlite3_column_int(stmt, 0);
-
-  for (int i = 0; i < nbBudg; ++i){
-    tabBudgColor[i] = malloc (7);
-    s[0] = '#';
-   for (int j = 1; j < 7; ++j) {
-      s[j] = alphanum[rand() % 16];
-    }
-    // s[7]='/0';  
-   strcpy(tabBudgColor[i], "#FF0000");//put s in tabBudgColor
-  }
-
-  for (int i = 0; i < nbBudg; ++i){ 
-    printf("TRUC 3:%d %s\n", i, tabBudgColor[i]);  
-  }
-  
-  colors = tabBudgColor;
-} 
-
-void faireInterfaceSuivi(cairo_t *cr){
+void affichageRecurentes(cairo_t *cr, int moisCourant, int nbBudgAffiche){
   GdkRGBA color;
+  // moisCourant = 12 - moisCourant;
+  for (int i = moisCourant + 1; i <= 12; i++) {
+    printf("RECU %d\n", i);
+    sqlite3_stmt *stmt;
+    char request[200] = "SELECT sum(montantDepRecu) ,idBudg from DEPENSESRECURRENTE INNER JOIN BUDGETS on typeDepRecu = typeBudg group by typeDepRecu";
+
+    if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
+      printf("ERROR TO SELECT DATA : DEPENSESRECURRENTE SUIVI\n");
+      exit(-1);
+    }
+    int count = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+
+      cairo_rectangle (cr, count++ * 20 + 10+ (i * 40) + (nbBudgAffiche * 15) , 255, 14,  -(int)sqlite3_column_int(stmt, 0)/ 2);
+      gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt, 1) - 1]);
+      color.alpha = 0.3;
+      gdk_cairo_set_source_rgba (cr, &color);
+      cairo_fill (cr);
+    }
+    //Afficher graduations du mois ssi il y a des budget dans le mois
+    if (count > 0) {
+      int decalage;
+
+      int numMois = i;
+      char sMois[12];
+      snprintf(sMois, sizeof(sMois), "%d", numMois);
+      cairo_set_source_rgba (cr, 200, 200, 200, 0.5);
+
+      //si nb budget pair plasser graduation du mois au millieu de deux budget si impair au centre du budget
+      if (count % 2 == 0) {
+        decalage = (count / 2) * 20 + 50 + (moisCourant * 40 + ( nbBudgAffiche  * 15));
+      }else{
+        decalage = (count / 2) * 20 + 55 + (moisCourant * 40 + ( nbBudgAffiche * 15));
+      }
+
+      cairo_move_to (cr, decalage, 257);
+      cairo_line_to (cr, decalage, 262);
+
+      cairo_move_to (cr, decalage - 4, 275);
+      cairo_set_font_size (cr, 12);
+      cairo_show_text (cr, sMois);
+      cairo_stroke (cr);
+    }
+    nbBudgAffiche += count;
+    moisCourant++;
+  }
+}
+
+void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
+  GdkRGBA color;
+
+  GtkStyleContext *context;
+  context = gtk_widget_get_style_context (widget);
+
+
   sqlite3_stmt *stmt;
   int b = 0;
 
@@ -146,12 +165,10 @@ void faireInterfaceSuivi(cairo_t *cr){
   Creation de l'interface du graphique: axes, graduations et legendes
   **/
   while (sqlite3_step(stmt) == SQLITE_ROW) {
-    printf("COLOR: %d\n", sqlite3_column_int(stmt, 0) - 1);
-
     cairo_set_source_rgb (cr, 250, 250, 250);
     if ((288 + ((b + 1) * 10)) < 400) {
       cairo_rectangle (cr, 15, 298 + (b++ * 12), 15, 15);
-      gdk_rgba_parse (&color, colors[sqlite3_column_int(stmt, 0) - 1]);
+      gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt, 0) - 1]);
       color.alpha = 0.5;
       gdk_cairo_set_source_rgba (cr, &color);
       cairo_fill (cr);
@@ -160,7 +177,7 @@ void faireInterfaceSuivi(cairo_t *cr){
       cairo_move_to (cr, 40, 290 + (b++ * 12));
     }else{
       cairo_rectangle (cr, 125, 150 + (b++ * 12), 15, 15);
-      gdk_rgba_parse (&color, colors[sqlite3_column_int(stmt, 0) - 1]);
+      gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt, 0) - 1]);
       color.alpha = 0.5;
       gdk_cairo_set_source_rgba (cr, &color);
       cairo_fill (cr);
@@ -171,7 +188,8 @@ void faireInterfaceSuivi(cairo_t *cr){
     cairo_set_source_rgba (cr, 200, 200, 200, 0.7);
     cairo_set_font_size (cr, 12);
     cairo_show_text (cr, (char *)sqlite3_column_text(stmt, 1));
-    gdk_rgba_parse (&color, colors[sqlite3_column_int(stmt, 0) - 1]);
+
+    gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt, 0) - 1]);
     gdk_cairo_set_source_rgba (cr, &color);
     cairo_fill (cr);
 
@@ -229,72 +247,8 @@ void faireInterfaceSuivi(cairo_t *cr){
   cairo_move_to (cr, 40, 5);
   cairo_line_to (cr, 40, 270);
   cairo_stroke (cr);
-}
 
-void affichageRecurentes(cairo_t *cr, int moisCourant, int nbMois, int nbBudgAffiche){
-  GdkRGBA color;
-
-  for (int i = moisCourant +1; i <= 12; i++) {
-    nbMois++;
-    sqlite3_stmt *stmt;
-    char request[200] = "SELECT sum(montantDepRecu) ,idBudg from DEPENSESRECURRENTE INNER JOIN BUDGETS on typeDepRecu = typeBudg group by typeDepRecu";
-
-    if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
-      printf("ERROR TO SELECT DATA : DEPENSESRECURRENTE SUIVI\n");
-      exit(-1);
-    }
-    int count = 0;
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-
-      cairo_rectangle (cr, count++ * 20 + 52+ (nbMois * 45) + (nbBudgAffiche * 15) , 255, 14,  -(int)sqlite3_column_int(stmt, 0)/ 2);
-      gdk_rgba_parse (&color, colors[sqlite3_column_int(stmt, 1) - 1]);
-      color.alpha = 0.3;
-      printf("Mois courant recu: %d\n", nbMois);
-
-      gdk_cairo_set_source_rgba (cr, &color);
-      cairo_fill (cr);
-    }
-    //Afficher graduations du mois ssi il y a des budget dans le mois
-    if (count > 0) {
-      int decalage;
-      int numMois = i;
-      char sMois[12];
-      snprintf(sMois, sizeof(sMois), "%d", numMois);
-      cairo_set_source_rgba (cr, 200, 200, 200, 0.5);
-
-      //si nb budget pair plasser graduation du mois au millieu de deux budget si impair au centre du budget
-      if (count % 2 == 0) {
-        decalage = (count / 2) * 20 + 50 + (nbMois * 45 ) + ( nbBudgAffiche  * 15);
-      }else{
-        decalage = (count / 2) * 20 + 55 + (nbMois * 45) + ( nbBudgAffiche * 15);
-      }
-
-      cairo_move_to (cr, decalage, 257);
-      cairo_line_to (cr, decalage, 262);
-
-      cairo_move_to (cr, decalage - 4, 275);
-      cairo_set_font_size (cr, 12);
-      cairo_show_text (cr, sMois);
-      cairo_stroke (cr);
-    }
-    nbBudgAffiche += count;
-    printf("NB BUDG AFFICHE recu: %d\n", nbBudgAffiche);
-
-    moisCourant++;
-  }
-}
-
-void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
-  GdkRGBA color;
-  genRandomColor();
-  
-
-  GtkStyleContext *context;
-  context = gtk_widget_get_style_context (widget);
-
-  // faireInterfaceSuivi(cr, colors);//Ceration axes, graduations et légendes
-
-  sqlite3_stmt *stmt1;//recuperation premiere depense
+  sqlite3_stmt *stmt1;
   char request2[200] = "SELECT strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) from DEPENSES where idDep = 1 ";
   if (sqlite3_prepare_v2(db, request2, -1, &stmt1, NULL)) {
     printf("ERROR TO SELECT DATA : SUIVI\n");
@@ -304,9 +258,10 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
   sqlite3_step(stmt1);
   int moisCourant = 0;
   int nbBudgAfficherTotal = 0;
-
-  //Pour chaque Mois
-  for (int i = getDatePremiereDep(); i <= 12; i++) {
+  int dernierMois = 0;
+  printf("MOIS DEBUT: %d", sqlite3_column_int(stmt1, 0));
+  for (int i = sqlite3_column_int(stmt1, 0); i <= 12; i++) {
+    printf("I = %d\n", i);
     char nums[10];
     char buffNum[3];
     if (i < 10) {
@@ -315,7 +270,8 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       strcat(nums, buffNum);
     }else{
       snprintf(nums, sizeof(nums), "%d", i);
-    } 
+    }
+
     sqlite3_stmt *stmt2;
     char request[200] = "SELECT sum(montantDep), idBudg, montantBudg from BUDGETS INNER JOIN DEPENSES on typeBudg = typeDep where strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch') ) = '";
 
@@ -330,21 +286,25 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
 
     int nbBudg = 0;
     while (sqlite3_step(stmt2) == SQLITE_ROW) {
+
+      // printf("Budget : %d\n", (int)sqlite3_column_double(stmt2, 2));
       int budgMontant = (int)sqlite3_column_double(stmt2, 2);
       double depType = sqlite3_column_double(stmt2, 0);
-      cairo_rectangle (cr, nbBudg++ * 22 + 50 + (moisCourant * 40) + (nbBudgAfficherTotal * 15), 255, 12,  -((depType + 1) / 2));
+      cairo_rectangle (cr, nbBudg++ * 20 + 50 + (moisCourant * 40) + (nbBudgAfficherTotal * 15), 255, 12,  -((depType + 1) / 2));
 
       gtk_style_context_get_color (context,
         gtk_style_context_get_state (context),
         &color);
 
-      gdk_rgba_parse (&color, colors[sqlite3_column_int(stmt2 , 0) - 1]);
+      gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt2, 1) - 1]);
       gdk_cairo_set_source_rgba (cr, &color);
       cairo_fill (cr);
-      cairo_rectangle (cr, (nbBudg - 1) * 22 + 52 + (moisCourant * 40) + (nbBudgAfficherTotal * 15), 255, 16,  -((budgMontant + 1) / 2));
-      gdk_rgba_parse (&color, colors[sqlite3_column_int(stmt2 , 0) - 1]);
+
+      cairo_rectangle (cr, (nbBudg - 1) * 20 + 52 + (moisCourant * 40) + (nbBudgAfficherTotal * 15), 255, 14,  -((budgMontant + 1) / 2));
+      gdk_rgba_parse (&color, colorsTab[sqlite3_column_int(stmt2, 1) - 1]);
       color.alpha = 0.6;
       gdk_cairo_set_source_rgba (cr, &color);
+      // draw_gradient1(cr);
       cairo_fill (cr);
     }
 
@@ -366,18 +326,18 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
 
       cairo_move_to (cr, decalage, 257);
       cairo_line_to (cr, decalage, 262);
-      printf("DEP moisCourant: %d\n", moisCourant);
+
       cairo_move_to (cr, decalage - 4, 275);
       cairo_set_font_size (cr, 12);
       cairo_show_text (cr, sMois);
       cairo_stroke (cr);
+      dernierMois = moisCourant;
     }
     nbBudgAfficherTotal += nbBudg;
     moisCourant++;
   }
-  printf("NB BUDG AFFICHE: %d\n", nbBudgAfficherTotal);
-  printf("DERNIERE DEP DATE: %d\n", getDateDerniereDep());
-  affichageRecurentes(cr, getDateDerniereDep(), getNbMois(), nbBudgAfficherTotal);
+  printf("1 DERNIER MOIS: %d\n", dernierMois);
+  affichageRecurentes(cr, dernierMois + 1, nbBudgAfficherTotal);
 }
 
   //GOOD
@@ -413,8 +373,8 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
   //GOOD
   void vueDepenses(){
     GtkTreeIter iter;
-    sqlite3_stmt *stmt;
 
+    sqlite3_stmt *stmt;
     char request[60] = "select * from DEPENSES";
 
     if (sqlite3_prepare_v2(db, request, -1, &stmt, NULL)) {
@@ -424,7 +384,6 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     gtk_list_store_clear(list_store_dep);
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-      int id = sqlite3_column_int(stmt, 0);
       double montant = sqlite3_column_double(stmt, 1) * 100;
       montant = (float)((int) montant);
       montant = montant/100;
@@ -439,11 +398,11 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       snprintf(type, sizeof(type), "%s", (char *)sqlite3_column_text(stmt, 2));
       snprintf(date, sizeof(date), "%s", buf);
       gtk_list_store_append(list_store_dep, &iter);
-      gtk_list_store_set(list_store_dep, &iter, 0, type, 1, montant, 2, date, 3, FALSE, 4, id, -1);
+      gtk_list_store_set(list_store_dep, &iter, 0, type, 1, montant, 2, date, -1);
     }
   }
 
-  //GOOD Affichage des differents budgets en la Treeview
+  //GOOD
   void vueBudgets(){
     GtkTreeIter iter;
     sqlite3_stmt *stmt;
@@ -459,7 +418,6 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     gtk_list_store_clear(list_store_budg);
     gtk_combo_box_text_remove_all(GTK_COMBO_BOX_TEXT(combo_box_dep));
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-      int id = sqlite3_column_int(stmt, 0);
 
       float montant = sqlite3_column_double(stmt, 1) ;
       montant = (float)((int) montant * 100) / 100;
@@ -483,12 +441,15 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
       if(progress > 100)
         progress = 100;
 
+      // printf("%s : %f / %f  = %d\n",type, getDepensesSumByType(type), montant, progress );
       gtk_list_store_append(list_store_budg, &iter);
-      gtk_list_store_set(list_store_budg, &iter, 0, type, 1, montString, 2, progress, 3, FALSE, 4, id, -1);
+      gtk_list_store_set(list_store_budg, &iter, 0, type, 1, montString, 2, progress,   -1);
 
       gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_box_dep), type);
     }
+    // printf("PROGRESS BAR: %f\n", (total_dep / total_budg) );
     gtk_progress_bar_set_fraction ((GtkProgressBar *)progress_bar_total, (total_dep / total_budg));
+
   }
 
   //GOOD
@@ -525,87 +486,6 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     gtk_widget_hide(dialog_suivi);
   }
 
-  void testToggled(GtkCellRendererToggle *cell, gchar * path, GtkListStore * model){
-    GtkTreeIter iter;
-    gboolean active;
-
-    active = gtk_cell_renderer_toggle_get_active (cell);
-
-    gtk_tree_model_get_iter_from_string (GTK_TREE_MODEL (model), &iter, path);
-// printf("PATH: %s\n", path);
-    if (active) {
-        gtk_list_store_set (model, &iter, 3, FALSE, -1);
-    }
-    else {
-        gtk_list_store_set (model, &iter, 3, TRUE, -1);
-    }
-  }
-
-  void supprRowDep(){
-    GtkTreeIter iter;
-    gint toggle;
-    int idDepense;
-    int tabSuppr[50];
-    int count = 0;
-
-    gtk_tree_model_get_iter_first (GTK_TREE_MODEL(list_store_dep), &iter);
-    gtk_tree_model_get (GTK_TREE_MODEL(list_store_dep), &iter, 3, &toggle, 4, &idDepense, -1);
-    
-   if (toggle){
-      tabSuppr[count++] = idDepense;
-    }
-
-    while(gtk_tree_model_iter_next (GTK_TREE_MODEL(list_store_dep), &iter)){
-      gtk_tree_model_get (GTK_TREE_MODEL(list_store_dep), &iter, 3, &toggle, 4, &idDepense, -1);
-      printf("VALUES DEPENSE %d: %d\n", idDepense, toggle);
-      if (toggle){
-        tabSuppr[count++] = idDepense;
-      }
-    }
-
-    for (int i = 0; i < count; ++i)
-    { 
-      printf("%d\n", count);
-      deleteDepense(tabSuppr[i]);
-    }
-  }
-
-
-  void supprRowBudg(){
-    GtkTreeIter iter;
-    gint toggle;
-    int idBudget;
-    int tabSuppr[50];
-    int count = 0;
-    printf("TEST SUPPR BUDGET\n");
-
-    gtk_tree_model_get_iter_first (GTK_TREE_MODEL(list_store_budg), &iter);
-    gtk_tree_model_get (GTK_TREE_MODEL(list_store_budg), &iter, 3, &toggle, 4, &idBudget, -1);
-  
-   if (toggle){
-      tabSuppr[count++] = idBudget;
-    }
-
-    while(gtk_tree_model_iter_next (GTK_TREE_MODEL(list_store_budg), &iter)){
-      gtk_tree_model_get (GTK_TREE_MODEL(list_store_budg), &iter, 3, &toggle, 4, &idBudget, -1);
-      printf("VALUES BUSGET %d: %d\n", idBudget, toggle);
-      if (toggle){
-        tabSuppr[count++] = idBudget;
-      }
-    }
-    printf("%ls\n", tabSuppr);
-    for (int i = 0; i < count ; ++i)
-    { 
-      printf("COUNT: %d\n", count);
-      deleteBudg(tabSuppr[i]);
-    }
-  }
-
-  void suppr(){
-    supprRowDep();
-    supprRowBudg();
-  }
-
   //Creation de l'interface
   void createWindow(int argc, char ** argv){
     GtkBuilder      *builder;
@@ -626,8 +506,6 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
                                GTK_STYLE_PROVIDER(cssProvider),
                                GTK_STYLE_PROVIDER_PRIORITY_USER);
-
-   // GtkWidget *treeview_dep = GTK_WIDGET(gtk_builder_get_object(builder, "treeview_dep"));
 
    GtkWidget *titre_budg = GTK_WIDGET(gtk_builder_get_object(builder, "label_budg"));
    GtkWidget *titre_mes_budg = GTK_WIDGET(gtk_builder_get_object(builder, "label_mes_budg"));
@@ -682,23 +560,30 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     input_montant_budg = GTK_WIDGET(gtk_builder_get_object(builder, "entry_budg_montant"));
     list_store_budg = GTK_LIST_STORE(gtk_builder_get_object(builder, "liste_budg"));
 
-    // toggle = GTK_CELL_RENDERER_TOGGLE(gtk_builder_get_object (builder, "cr7"));
-    // gtk_cell_renderer_toggle_set_activatable (toggle, TRUE);
-    GtkTreeViewColumn *column = GTK_TREE_VIEW_COLUMN(gtk_builder_get_object(builder, "cx6"));
-    gtk_tree_view_column_set_expand (column, TRUE);
-
     vueDepenses();
 
     vueBudgets();
 
     g_object_unref(builder);
-    paymentDepensesRecu();
 
     gtk_widget_show_all(window);
     gtk_main();
   }
 
   int main(int argc, char **argv){
-    bddConnect(argv[1]);
+    bddConnect(db);
+
+    char jour[20];
+    time_t time_raw_format;
+    struct tm * ptr_time;
+    time ( &time_raw_format );
+    ptr_time = localtime ( &time_raw_format );
+    strftime(jour ,50,"%d",ptr_time);
+    // printf("DATE : %s\n", jour);
+    //si date egale premier du mois alors
+    if (strcmp(jour, "13") == 0) {
+      printf("PAYMENT TOUTES DEPENSES RECU !\n");
+      paymentDepensesRecu();
+    }
     createWindow(argc, argv);
   }

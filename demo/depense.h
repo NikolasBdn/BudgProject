@@ -15,8 +15,4 @@ void printColumnValue(sqlite3_stmt* stmt, int col);
 int replacechar(char *str, char orig, char rep);
 void checkDepensesRecu();
 int replacechar(char *str, char orig, char rep);
-int getDateDerniereDep();
-int getNbMois();
-void deleteDepense(int id);
-int getDatePremiereDep();
 #endif

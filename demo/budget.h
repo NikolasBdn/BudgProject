@@ -10,7 +10,7 @@ struct Budget{
 void insertBudg(char *montant, char *type);
 struct Budget getBudget(int index);
 struct Budget getBudgetByType(char *type);
+
 int getNbBudgets();
 void updateBudgetsMontant();
-void deleteBudg(int id);
 #endif
