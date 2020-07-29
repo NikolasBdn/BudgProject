@@ -8,9 +8,9 @@ struct Depense{
   char date[50];
 };
 
-void insertDepense(char *m, char *t);
+void insertDepense(char *m, int id);
 void printDepenses();
-double getDepensesSumByType(char *type);
+double getDepensesSumByType(int id);
 void printColumnValue(sqlite3_stmt* stmt, int col);
 int replacechar(char *str, char orig, char rep);
 void checkDepensesRecu();

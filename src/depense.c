@@ -11,20 +11,22 @@ extern GtkWidget *inpt_dep, *combo_box_dep, *list;
 
 extern sqlite3 *db;
 
-void insertDepense(char *m, char *t){
+void insertDepense(char *m, int idB){
   struct Depense dep;
+  char buffId[10];
   dep.montant = atof(m);
-  snprintf(dep.type, sizeof(dep.type), "%s", t);
 
   printf("DEPENSES : %s\n", dep.type);
   //Si le montant est > 0 et type != null
   if (dep.montant > 0 && strcmp(dep.type, "(null)") != 0) {
-    char request[80] = "insert into DEPENSES (montantDep, typeDep) values(";
+    char request[80] = "insert into DEPENSES (montantDep, idType) values(";
     replacechar(m, ',', '.');
     strcat(request, m);
     strcat(request,", '");
-    strcat(request, dep.type);
+    snprintf(buffId, sizeof(buffId), "%d", idB);
+    strcat(request, buffId);
     strcat(request,"')");
+    printf("REQUEST: %s", request);
     if(sqlite3_exec(db, request, NULL, NULL, NULL)){
       printf("ERROR IN INSERTION : DEPENSE\n");
     }else{
@@ -45,13 +47,10 @@ void deleteDepense(int id){
 
   if(sqlite3_exec(db, request, NULL, NULL, NULL)){
     printf("ERROR IN DELETE : DEPENSE\n");
-  }else{
-    vueBudgets();
-    vueDepenses();
   }
 }
 
-double getDepensesSumByType(char *type){
+double getDepensesSumByType(int idB){
 
  time_t timer;
   struct tm* tm_info;
@@ -62,15 +61,18 @@ double getDepensesSumByType(char *type){
   printf("%s\n", mois);
 
   sqlite3_stmt *stmt;
-  char a[150] = "select sum(montantDep) from depenses where typeDep = '";
-  strcat(a, type);
+  char buffId[10];
+
+  char a[150] = "select sum(montantDep) from depenses where idType = '";
+  snprintf(buffId, sizeof(buffId), "%d", idB);
+  strcat(a, buffId);
   strcat(a, "'");
 
   strcat(a, " and strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) = '");
   strcat(a, mois);
   strcat(a, "'");
   // printf("%s\n", a);
-  char request[150] = "select sum(montantDep) from depenses where typeDep = 'Alimentation' and strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) = '08'";
+  // char request[150] = "select sum(montantDep) from depenses where typeDep = 'Alimentation' and strftime('%m', DATETIME(ROUND(dateDep), 'unixepoch')) = '08'";
 
   if (sqlite3_prepare_v2(db, a, -1, &stmt, NULL)) {
     printf("ERROR TO SELECT DATA\n");

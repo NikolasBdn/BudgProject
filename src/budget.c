@@ -24,6 +24,8 @@ int budgUnique(char *type){
   }
 
   sqlite3_step(stmt);
+  printf("budg UNIQUE ?: %d\n", sqlite3_column_int(stmt, 0));
+
   return sqlite3_column_int(stmt, 0) - 1;
 }
 
@@ -36,7 +38,7 @@ void insertBudg(char *montant, char *type){
   snprintf(budg.type, sizeof(budg.type), "%s", type);
   printf("INSERT BUDG : %s : %s\n", type, montant);
     //Si montant > 0 et si le budg n'existe pas encore
-  if (budg.montant > 0 && budgUnique(budg.type)) {
+  if (budg.montant > 0 && budgUnique(budg.type) && strcmp(budg.type, "") != 0) {
 
     char request[80] = "insert into BUDGETS (montantBudg, typeBudg) values(";
     replacechar(montant, ',', '.');
@@ -48,12 +50,12 @@ void insertBudg(char *montant, char *type){
     if(sqlite3_exec(db, request, NULL, NULL, NULL)){
       printf("ERROR IN INSERTION : BUDGET\n");
     }else{
-      printf("INSERT BUDGET : %s : %s\n", montant, type);
+      // printf("INSERT BUDGET : %s : %s %d\n", montant, type, budgUnique(budg.type) );
       // updateBudgets();
       vueBudgets();
     }
   }else{
-    printf("PAS UNIQUE: %s\n", budg.type);
+    // printf("PAS UNIQUE: %s %d\n", budg.type, budgUnique(budg.type));
   }
 }
 
@@ -61,7 +63,7 @@ void insertBudg(char *montant, char *type){
 void deleteBudg(int id){
   sqlite3_stmt *stmt;
   char buffId[10];
-  char request2[80] = "select typeBudg from BUDGETS where idBudg =";
+  char request2[80] = "select idBudg from BUDGETS where idBudg =";
   snprintf(buffId, sizeof(buffId), "%d", id);
   strcat(request2, buffId);
   printf("%s\n", request2);
@@ -83,7 +85,7 @@ void deleteBudg(int id){
   // suppression des dépenses associées au budg supprimé
   char *buffType = (char *)sqlite3_column_text(stmt, 0);
   printf("BUFFTYPE: %s\n", buffType);
-  char request3[80] = "DELETE from DEPENSES where typeDep =";
+  char request3[80] = "DELETE from DEPENSES where idType =";
   // snprintf(buffType, sizeof(buffType), "%d", id);
   strcat(request3, "'");
   strcat(request3, buffType);
@@ -92,14 +94,10 @@ void deleteBudg(int id){
 
   if(sqlite3_exec(db, request3, NULL, NULL, NULL)){
     printf("ERROR IN DELETE : DEPENSES DE BUDGETS\n");
-  }else{
-     vueBudgets();
-    vueDepenses();
-  } 
-
+  }
    // suppression des dépenses récurrentes associées au budg supprimé
   printf("BUFFTYPE: %s\n", buffType);
-  char request4[80] = "DELETE from DEPENSESRECURRENTE where typeDepRecu =";
+  char request4[80] = "DELETE from DEPENSESRECURRENTE where idType =";
   // snprintf(buffType, sizeof(buffType), "%d", id);
   strcat(request4, "'");
   strcat(request4, buffType);
@@ -108,9 +106,6 @@ void deleteBudg(int id){
 
   if(sqlite3_exec(db, request4, NULL, NULL, NULL)){
     printf("ERROR IN DELETE : DEPENSESRECURRENTES DE BUDGETS\n");
-  }else{
-     vueBudgets();
-    vueDepenses();
   }
 }
 

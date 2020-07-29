@@ -5,7 +5,7 @@
 #include "depense.h"
 #include "main.h"
 
-void insertDepenseRecu(char *m, char *t);
+void insertDepenseRecu(char *m, int id);
 void testRecu();
 void paymentDepensesRecu();
 #endif

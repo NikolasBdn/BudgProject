@@ -1,6 +1,35 @@
-insert into DEPENSES (montantDep, typeDep, dateDep) values (135, 'Alimentation', 1577836800);
-insert into DEPENSES (montantDep, typeDep, dateDep) values (54, 'Alimentation', 1580515200);
-insert into DEPENSES (montantDep, typeDep, dateDep) values (75, 'Alimentation', 1583020800);
-insert into DEPENSES (montantDep, typeDep, dateDep) values (200, 'Alimentation', 1585785600);
-insert into DEPENSES (montantDep, typeDep, dateDep) values (150, 'Alimentation', 1588291200);
-insert into DEPENSES (montantDep, typeDep, dateDep) values (140, 'Alimentation', 1590969600);
+insert into BUDGETS (montantBudg, typeBudg) values (200, 'Alimentation');
+insert into BUDGETS (montantBudg, typeBudg) values (300, 'Loyer');
+insert into BUDGETS (montantBudg, typeBudg) values (75, 'Loisirs');
+insert into BUDGETS (montantBudg, typeBudg) values (50, 'Transport');
+
+
+
+
+insert into DEPENSES (montantDep, idType, dateDep) values (135, 1, 1577836800);
+insert into DEPENSES (montantDep, idType, dateDep) values (54, 1, 1580515200);
+insert into DEPENSES (montantDep, idType, dateDep) values (75, 1, 1583020800);
+insert into DEPENSES (montantDep, idType, dateDep) values (200, 1, 1585785600);
+insert into DEPENSES (montantDep, idType, dateDep) values (150, 1, 1588291200);
+insert into DEPENSES (montantDep, idType, dateDep) values (140, 1, 1590969600);
+
+insert into DEPENSES (montantDep, idType, dateDep) values (275, 2, 1577836800);
+insert into DEPENSES (montantDep, idType, dateDep) values (300, 2, 1580515200);
+insert into DEPENSES (montantDep, idType, dateDep) values (300, 2, 1583020800);
+insert into DEPENSES (montantDep, idType, dateDep) values (300, 2, 1585785600);
+insert into DEPENSES (montantDep, idType, dateDep) values (300, 2, 1588291200);
+insert into DEPENSES (montantDep, idType, dateDep) values (300, 2, 1590969600);
+
+insert into DEPENSES (montantDep, idType, dateDep) values (20, 3, 1577836800);
+insert into DEPENSES (montantDep, idType, dateDep) values (40, 3, 1580515200);
+insert into DEPENSES (montantDep, idType, dateDep) values (35, 3, 1583020800);
+insert into DEPENSES (montantDep, idType, dateDep) values (30, 3, 1585785600);
+insert into DEPENSES (montantDep, idType, dateDep) values (40, 3, 1588291200);
+insert into DEPENSES (montantDep, idType, dateDep) values (15, 3, 1590969600);
+
+insert into DEPENSES (montantDep, idType, dateDep) values (40, 4, 1577836800);
+insert into DEPENSES (montantDep, idType, dateDep) values (30, 4, 1580515200);
+insert into DEPENSES (montantDep, idType, dateDep) values (35, 4, 1583020800);
+insert into DEPENSES (montantDep, idType, dateDep) values (40, 4, 1585785600);
+insert into DEPENSES (montantDep, idType, dateDep) values (50, 4, 1588291200);
+insert into DEPENSES (montantDep, idType, dateDep) values (45, 4, 1590969600);
