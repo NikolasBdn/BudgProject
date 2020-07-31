@@ -7,5 +7,5 @@
 
 void insertDepenseRecu(char *m, int id);
 void testRecu();
-void paymentDepensesRecu();
+void paiementDepensesRecu();
 #endif

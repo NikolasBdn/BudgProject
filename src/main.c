@@ -280,7 +280,6 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
   GdkRGBA color;
   // genRandomColor();
   
-
   GtkStyleContext *context;
   context = gtk_widget_get_style_context (widget);
 
@@ -706,7 +705,7 @@ void dessinerSuivi(GtkWidget *widget, cairo_t *cr, gpointer data){
     vueBudgets();
 
     g_object_unref(builder);
-    paymentDepensesRecu();
+    paiementDepensesRecu();
 
     gtk_widget_show_all(window);
     gtk_main();

@@ -65,7 +65,7 @@ void testRecu(){
 }
 
 
-void paymentDepensesRecu(){
+void paiementDepensesRecu(){
   sqlite3_stmt *stmt;
   char a[80] = "select * from DEPENSESRECURRENTE";
 
