@@ -1,0 +1,2 @@
+gcc -g -Wall -ansi main.c budget.c depense.c depense_recu.c -o main.o -fno-stack-protector -rdynamic -lsqlite3 -std=c99  `pkg-config --libs --cflags gtk+-3.0`
+./main.o the.db
